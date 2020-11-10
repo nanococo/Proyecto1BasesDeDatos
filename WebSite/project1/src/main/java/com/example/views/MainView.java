@@ -1,10 +1,10 @@
-package com.example;
+package com.example.views;
 
+import com.example.services.GreetService;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -54,8 +54,22 @@ public class MainView extends VerticalLayout {
         passwordField.addThemeName("bordered");
 
         // Button click listeners can be defined as lambda expressions
-        Button button = new Button("Login",
-                e -> Notification.show(service.greet(usernameField.getValue())));
+//        Button button = new Button("Login", e -> Notification.show(service.greet(usernameField.getValue())));
+        Button button = new Button("Login", e -> {
+
+            if(!usernameField.getValue().equals("") && !passwordField.getValue().equals("")){
+                if(service.login(usernameField.getValue(), passwordField.getValue())){
+                    Notification.show("Welcome");
+                    service.navigate();
+
+                } else {
+                    Notification.show("Your account doesn't exist");
+                }
+            } else {
+                Notification.show("Username or Password not provided");
+            }
+
+        });
 
         // Theme variants give you predefined extra styles for components.
         // Example: Primary button has a more prominent look.
