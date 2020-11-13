@@ -1,15 +1,14 @@
 package com.testApi.p1Api;
 
 import com.testApi.p1Api.DataBaseManager.SQLConnection;
-import com.testApi.p1Api.Pojos.AccountsHolder;
-import com.testApi.p1Api.Pojos.LoginInfo;
+import com.testApi.p1Api.Pojos.*;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class TestController {
+public class    TestController {
 
     @GetMapping("/employees")
     public String test(){
@@ -27,11 +26,49 @@ public class TestController {
         return SQLConnection.getInstance().getAccounts(value);
     }
 
-    @GetMapping("/test")
-    public String test2(@RequestParam(value = "testVal") String value, @RequestParam(value = "testVal2") String value2){
-        System.out.println("Value 1: "+value);
-        System.out.println("Value 2: "+value2);
-        SQLConnection.getInstance().setPlayer(value, value2);
-        return "Success";
+    @GetMapping(value = "/getBeneficiaries", produces = MediaType.APPLICATION_JSON_VALUE)
+    public BeneficiaryHolder getBeneficiaries(@RequestParam(value = "accountId") String value){
+        return SQLConnection.getInstance().getBeneficiaries(value);
     }
+
+    @GetMapping(value = "/getKinship", produces = MediaType.APPLICATION_JSON_VALUE)
+    public KinshipHolder getKinship(){
+        return SQLConnection.getInstance().getKinship();
+    }
+
+    @GetMapping(value = "/insertBeneficiary")
+    public void getKinship(@RequestParam(value = "id") String value,
+                           @RequestParam(value = "percentage") String value2,
+                           @RequestParam(value = "accountId") String value3,
+                           @RequestParam(value = "kinship") String value4){
+
+        SQLConnection.getInstance().insertBeneficiary(value, value2, value3, value4);
+    }
+
+    @GetMapping(value = "/deleteBeneficiary")
+    public void deleteBeneficiary(@RequestParam(value = "id") String value,
+                                  @RequestParam(value = "beneficiaryId") String value2){
+
+        SQLConnection.getInstance().deleteBeneficiary(value, value2);
+    }
+
+    @GetMapping(value = "/updateBeneficiary")
+    public void updateBeneficiary(@RequestParam(value = "personId") String value,
+                                  @RequestParam(value = "accountId") String value2,
+                                  @RequestParam(value = "name") String value3,
+                                  @RequestParam(value = "kinship") String value4,
+                                  @RequestParam(value = "percentage") String value5,
+                                  @RequestParam(value = "date") String value6,
+                                  @RequestParam(value = "newId") String value7,
+                                  @RequestParam(value = "email") String value8,
+                                  @RequestParam(value = "phone1") String value9,
+                                  @RequestParam(value = "phone2") String value10){
+        SQLConnection.getInstance().updateBeneficiary(value, value2, value3, value4, value5, value6, value7, value8, value9, value10);
+    }
+
+    @GetMapping(value = "/getStatement", produces = MediaType.APPLICATION_JSON_VALUE)
+    public StatementHolder getStatement(@RequestParam(value = "accountId") String value){
+        return SQLConnection.getInstance().getStatements(value);
+    }
+
 }

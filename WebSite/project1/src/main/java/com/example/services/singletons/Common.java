@@ -1,12 +1,14 @@
 package com.example.services.singletons;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class Common {
 
-    public static String username;
+    public static String username = "imendez";
+    public static int accountId = 35;
 
     /**
      * @param url is the url
@@ -36,6 +38,22 @@ public class Common {
             sb.append((char) cp);
         }
         return sb.toString();
+    }
+
+    /**
+     * @param url
+     * @param httpType
+     * Make an api call
+     */
+    public static int makeApiCall(URL url, String httpType) {
+        try {
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod(httpType);
+            int responseCode = con.getResponseCode();
+            con.disconnect();
+            return responseCode;
+        } catch (IOException ignored) {}
+        return 404;
     }
 
 }
