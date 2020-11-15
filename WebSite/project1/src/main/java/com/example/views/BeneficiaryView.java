@@ -3,6 +3,7 @@ package com.example.views;
 import com.example.pojos.Beneficiary;
 import com.example.services.Services;
 import com.example.views.forms.AddBeneficiaryForm;
+import com.example.views.forms.AddPersonForm;
 import com.example.views.forms.EditBeneficiaryForm;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -26,6 +27,7 @@ public class BeneficiaryView extends VerticalLayout {
 
     private final AddBeneficiaryForm addBeneficiaryForm;
     private final EditBeneficiaryForm editBeneficiaryForm;
+    private final AddPersonForm addPersonForm;
     private final Grid<Beneficiary> dataGrid = new Grid<>(Beneficiary.class);
     private ArrayList<Beneficiary> beneficiaries;
 
@@ -40,6 +42,8 @@ public class BeneficiaryView extends VerticalLayout {
 
     private final Button button = new Button("Agregar Beneficiarios");
     private final Button button2 = new Button("Editar Beneficiarios");
+    private final Button button5 = new Button("Agregar Persona");
+
     private final Button button3 = new Button("Eliminar Beneficiarios");
     private final Button button4 = new Button(new Icon(VaadinIcon.TRASH));
 
@@ -55,6 +59,8 @@ public class BeneficiaryView extends VerticalLayout {
         addBeneficiaryForm = new AddBeneficiaryForm(service);
         addBeneficiaryForm.setBeneficiaryView(this);
 
+        addPersonForm = new AddPersonForm(service);
+        addPersonForm.setBeneficiaryView(this);
 
         H1 h1 = new H1("Beneficiarios");
         warningMessage.addClassName("warningLabel");
@@ -66,9 +72,10 @@ public class BeneficiaryView extends VerticalLayout {
         configureButton2();
         configureButton3();
         configureButton4();
+        configureButton5();
 
 
-        horizontalLayout.add(button, button2, button3, button4);
+        horizontalLayout.add(button, button2, button3, button5, button4);
 
         configureDataGrid();
 
@@ -76,7 +83,7 @@ public class BeneficiaryView extends VerticalLayout {
         HorizontalLayout gridLayout = new HorizontalLayout();
         gridLayout.setSizeFull();
 
-        gridLayout.add(dataGrid, addBeneficiaryForm, editBeneficiaryForm);
+        gridLayout.add(dataGrid, addBeneficiaryForm, editBeneficiaryForm, addPersonForm);
 
         checkBeneficiaryAddition();
 
@@ -134,6 +141,7 @@ public class BeneficiaryView extends VerticalLayout {
         button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         button.addClickListener(event ->{
             editBeneficiaryForm.setVisible(false);
+            addPersonForm.setVisible(false);
             addBeneficiaryForm.setVisible(true);
         });
     }
@@ -142,6 +150,7 @@ public class BeneficiaryView extends VerticalLayout {
         button2.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         button2.addClickListener(buttonClickEvent -> {
             addBeneficiaryForm.setVisible(false);
+            addPersonForm.setVisible(false);
             editBeneficiaryForm.setVisible(true);
         });
     }
@@ -151,6 +160,7 @@ public class BeneficiaryView extends VerticalLayout {
         button3.addClickListener(buttonClickEvent -> {
             addBeneficiaryForm.setVisible(false);
             editBeneficiaryForm.setVisible(false);
+            addPersonForm.setVisible(false);
             if(!button3Selected){
 
                 button3Selected = true;
@@ -159,6 +169,7 @@ public class BeneficiaryView extends VerticalLayout {
 
                 button.setEnabled(false);
                 button2.setEnabled(false);
+                button5.setEnabled(false);
 
                 dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
 
@@ -178,6 +189,7 @@ public class BeneficiaryView extends VerticalLayout {
                 button3Selected = false;
                 button.setEnabled(true);
                 button2.setEnabled(true);
+                button5.setEnabled(true);
                 button4.setVisible(false);
 
                 configureDataGrid();
@@ -201,6 +213,14 @@ public class BeneficiaryView extends VerticalLayout {
 
             updateDataGrid();
             configureDataGrid();
+        });
+    }
+
+    private void configureButton5() {
+        button5.addClickListener(buttonClickEvent -> {
+            addBeneficiaryForm.setVisible(false);
+            editBeneficiaryForm.setVisible(false);
+            addPersonForm.setVisible(true);
         });
     }
 

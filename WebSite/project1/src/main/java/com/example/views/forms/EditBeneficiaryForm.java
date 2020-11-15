@@ -19,7 +19,7 @@ public class EditBeneficiaryForm extends FormLayout {
     private final TextField id = new TextField("Identificación");
     private final TextField name = new TextField("Nombre");
     private final TextField email = new TextField("Email");
-    private final DatePicker datePicker = new DatePicker();
+    private final DatePicker datePicker = new DatePicker("Cumpleaños");
     private final ComboBox<String> kinship = new ComboBox<>("Tipo Parentesco");
     private final TextField percentage = new TextField("Porcentaje");
     private final TextField phone1 = new TextField("Tel. 1");
@@ -93,9 +93,12 @@ public class EditBeneficiaryForm extends FormLayout {
     public void configureUpdate(){
 
         update.addClickListener(buttonClickEvent -> {
-            Notification.show("Updated Successfully");
             if(beneficiary!=null){
-                service.updateBeneficiary(String.valueOf(beneficiary.getPersonId()), name.getValue(), kinship.getValue(), percentage.getValue(), date, id.getValue(), email.getValue(), phone1.getValue(), phone2.getValue());
+                if(service.updateBeneficiary(String.valueOf(beneficiary.getPersonId()), name.getValue(), kinship.getValue(), percentage.getValue(), date, id.getValue(), email.getValue(), phone1.getValue(), phone2.getValue())==200){
+                    Notification.show("Updated Successfully");
+                    beneficiaryView.updateDataGrid();
+                    beneficiaryView.checkBeneficiaryAddition();
+                }
             }
         });
 

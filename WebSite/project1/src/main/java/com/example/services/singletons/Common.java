@@ -9,6 +9,7 @@ public class Common {
 
     public static String username = "imendez";
     public static int accountId = 35;
+    public static boolean isAdmin = false;
 
     /**
      * @param url is the url

@@ -105,6 +105,47 @@ public class SQLConnection {
         return null;
     }
 
+    public AccountsHolder getAllAccounts(){
+        Connection connection = null;
+        ArrayList<Account> accounts = new ArrayList<>();
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            //CallableStatement proc = connection.prepareCall("{call testLogin(?,?)}");
+            CallableStatement proc = connection.prepareCall("{call sp_getAllAccounts()}");
+            DecimalFormat df = new DecimalFormat("#.##");
+
+            ResultSet test = proc.executeQuery();
+            while(test.next()) {
+                accounts.add(new Account(
+                        Integer.parseInt(test.getString("Id")),
+                        Integer.parseInt(test.getString("NumeroCuenta")),
+                        Integer.parseInt(test.getString("PersonaId")),
+                        Integer.parseInt(test.getString("TipoCuentaId")),
+                        test.getString("FechaCreacion"),
+                        df.format(Double.parseDouble(test.getString("Saldo"))),
+                        test.getString("EstaActiva").equals("1")
+                ));
+            }
+
+            connection.close();
+            return new AccountsHolder(accounts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (Exception f){
+                f.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+
+
     public BeneficiaryHolder getBeneficiaries(String accountId) {
         Connection connection = null;
         ArrayList<Beneficiary> beneficiaries = new ArrayList<>();
@@ -183,19 +224,24 @@ public class SQLConnection {
         return null;
     }
 
-    public void insertBeneficiary(String id, String percentage, String accountId, String kinship){
+    public IdTypeHolder getIdTypes() {
         Connection connection = null;
+        ArrayList<IdType> kinship = new ArrayList<>();
         try {
             connection = DriverManager.getConnection(connectionString, user, this.password);
 
-            CallableStatement proc = connection.prepareCall("{call sp_insertarBeneficiario(?,?,?,?)}");
-            proc.setString(1, id);
-            proc.setInt(2, Integer.parseInt(accountId));
-            proc.setInt(3, Integer.parseInt(percentage));
-            proc.setString(4, kinship);
+            CallableStatement proc = connection.prepareCall("{call sp_getIdTypes()}");
 
-            proc.execute();
+            ResultSet test = proc.executeQuery();
+            while(test.next()) {
+                kinship.add(new IdType(
+                        Integer.parseInt(test.getString(1)),
+                        test.getString(2)
+                ));
+            }
+
             connection.close();
+            return new IdTypeHolder(kinship);
 
         }catch (Exception e){
             e.printStackTrace();
@@ -207,19 +253,27 @@ public class SQLConnection {
                 f.printStackTrace();
             }
         }
+        return null;
     }
 
-    public void deleteBeneficiary(String accountId, String beneficiaryId) {
+    public boolean insertBeneficiary(String id, String percentage, String accountId, String kinship){
         Connection connection = null;
         try {
             connection = DriverManager.getConnection(connectionString, user, this.password);
 
-            CallableStatement proc = connection.prepareCall("{call sp_eliminarBeneficiario(?,?)}");
-            proc.setInt(1, Integer.parseInt(beneficiaryId));
-            proc.setInt(2, Integer.parseInt(accountId));
+            CallableStatement proc = connection.prepareCall("{? = call sp_insertarBeneficiario(?,?,?,?)}");
+            proc.registerOutParameter(1, Types.INTEGER);
+
+            proc.setString(2, id);
+            proc.setInt(3, Integer.parseInt(accountId));
+            proc.setInt(4, Integer.parseInt(percentage));
+            proc.setString(5, kinship);
 
             proc.execute();
+            int ret = proc.getInt(1);
             connection.close();
+
+            return ret==1;
 
         }catch (Exception e){
             e.printStackTrace();
@@ -231,30 +285,24 @@ public class SQLConnection {
                 f.printStackTrace();
             }
         }
+        return false;
     }
 
-    public void updateBeneficiary(String personId, String physicalId, String name, String kinship, String percentage, String date, String newId, String email, String phone1, String phone2) {
+    public boolean deleteBeneficiary(String accountId, String beneficiaryId) {
         Connection connection = null;
         try {
             connection = DriverManager.getConnection(connectionString, user, this.password);
 
-            System.out.println(name);
+            CallableStatement proc = connection.prepareCall("{? = call sp_eliminarBeneficiario(?,?)}");
 
-            CallableStatement proc = connection.prepareCall("{call sp_editarBeneficiario(?,?,?,?,?,?,?,?,?,?)}");
-            proc.setInt(1, Integer.parseInt(personId));
-            proc.setInt(2, Integer.parseInt(physicalId));
-            proc.setString(3, name);
-            proc.setString(4, kinship);
-            proc.setInt(5, Integer.parseInt(percentage));
-            proc.setDate(6, Date.valueOf(date));
-            proc.setInt(7, Integer.parseInt(newId));
-            proc.setString(8, email);
-            proc.setInt(9, Integer.parseInt(phone1));
-            proc.setInt(10, Integer.parseInt(phone2));
-
+            proc.registerOutParameter(1, Types.INTEGER);
+            proc.setInt(2, Integer.parseInt(beneficiaryId));
+            proc.setInt(3, Integer.parseInt(accountId));
 
             proc.execute();
+            int ret = proc.getInt(1);
             connection.close();
+            return ret==1;
 
         }catch (Exception e){
             e.printStackTrace();
@@ -266,6 +314,46 @@ public class SQLConnection {
                 f.printStackTrace();
             }
         }
+        return false;
+    }
+
+    public boolean updateBeneficiary(String personId, String physicalId, String name, String kinship, String percentage, String date, String newId, String email, String phone1, String phone2) {
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{? = call sp_editarBeneficiario(?,?,?,?,?,?,?,?,?,?)}");
+
+            proc.registerOutParameter(1, Types.INTEGER);
+
+            proc.setInt(2, Integer.parseInt(personId));
+            proc.setInt(3, Integer.parseInt(physicalId));
+            proc.setString(4, name);
+            proc.setString(5, kinship);
+            proc.setInt(6, Integer.parseInt(percentage));
+            proc.setDate(7, Date.valueOf(date));
+            proc.setInt(8, Integer.parseInt(newId));
+            proc.setString(9, email);
+            proc.setInt(10, Integer.parseInt(phone1));
+            proc.setInt(11, Integer.parseInt(phone2));
+
+
+            proc.execute();
+            int ret = proc.getInt(1);
+            connection.close();
+            return ret==1;
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (Exception f){
+                f.printStackTrace();
+            }
+        }
+        return false;
     }
 
     public StatementHolder getStatements(String accountId) {
@@ -304,5 +392,40 @@ public class SQLConnection {
             }
         }
         return new StatementHolder();
+    }
+
+    public boolean insertPerson(String id, String idTypeName, String date, String name, String email, String phone1, String phone2) {
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{? = call sp_insertarPersona(?,?,?,?,?,?,?)}");
+            proc.registerOutParameter(1, Types.INTEGER);
+
+            proc.setString(2, id);
+            proc.setString(3, idTypeName);
+            proc.setString(4, name);
+            proc.setDate(5, Date.valueOf(date));
+            proc.setString(6, email);
+            proc.setInt(7, Integer.parseInt(phone1));
+            proc.setInt(8, Integer.parseInt(phone2));
+
+            proc.execute();
+            int ret = proc.getInt(1);
+            connection.close();
+
+            return ret==1;
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (Exception f){
+                f.printStackTrace();
+            }
+        }
+        return false;
     }
 }

@@ -26,6 +26,7 @@ public class GreetService implements Serializable {
     public boolean login(String username, String password){
         ReadContext readContext = JsonPath.parse(Common.readJsonFromUrl("http://localhost:8081/login?username="+username+"&password="+password));
         Common.username = readContext.read("$.username");
+        Common.isAdmin = readContext.read("$.admin");
         return readContext.read("$.found");
     }
 

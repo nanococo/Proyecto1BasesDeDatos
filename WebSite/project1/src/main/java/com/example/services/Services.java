@@ -7,7 +7,6 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import com.vaadin.flow.component.UI;
 import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -24,9 +23,15 @@ public class Services {
         try {
             AccountsHolder accountsHolder;
             Gson gson = new Gson();
-            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getAccounts?username="+Common.username);
-            accountsHolder = gson.fromJson(jsonString, AccountsHolder.class);
+            String jsonString;
 
+            if(Common.isAdmin){
+                jsonString = Common.readJsonFromUrl("http://localhost:8081/getAllAccounts");
+            } else {
+                jsonString = Common.readJsonFromUrl("http://localhost:8081/getAccounts?username="+Common.username);
+            }
+
+            accountsHolder = gson.fromJson(jsonString, AccountsHolder.class);
             accounts = accountsHolder.getAccounts();
         } catch (Exception e){
             e.printStackTrace();
@@ -78,7 +83,7 @@ public class Services {
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-        return 404;
+        return 400;
     }
 
     public ArrayList<String> getKinship() {
@@ -92,6 +97,17 @@ public class Services {
         return kinship;
     }
 
+    public ArrayList<String> getIdTypes(){
+        ArrayList<String> idTypes = new ArrayList<>();
+        ReadContext readContext = JsonPath.parse(Common.readJsonFromUrl("http://localhost:8081/getIdType"));
+        int indexesToCheck =  ((JSONArray) readContext.read("$.idTypes")).size();
+
+        for (int i = 0; i < indexesToCheck; i++) {
+            idTypes.add(readContext.read("$.idTypes["+i+"].idTypeName"));
+        }
+        return idTypes;
+    }
+
     public void deleteBeneficiary(ArrayList<Beneficiary> selectedBeneficiaries) {
         for (Beneficiary selectedBeneficiary : selectedBeneficiaries) {
             try {
@@ -103,16 +119,27 @@ public class Services {
         }
     }
 
-    public void updateBeneficiary(String personId, String name, String kinship, String percentage, String date, String newId, String email, String phone1, String phone2) {
+    public int updateBeneficiary(String personId, String name, String kinship, String percentage, String date, String newId, String email, String phone1, String phone2) {
         try {
             Thread.sleep(500);
-            Common.makeApiCall(new URL(("http://localhost:8081/updateBeneficiary?personId="+URLEncoder.encode(personId+"&accountId="+Common.accountId+"&name="+name+"&kinship="+kinship+"&percentage="+percentage+"&date="+date+"&newId="+newId+"&email="+email+"&phone1="+phone1+"&phone2="+phone2, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=")), "GET");
+            return Common.makeApiCall(new URL(("http://localhost:8081/updateBeneficiary?personId="+URLEncoder.encode(personId+"&accountId="+Common.accountId+"&name="+name+"&kinship="+kinship+"&percentage="+percentage+"&date="+date+"&newId="+newId+"&email="+email+"&phone1="+phone1+"&phone2="+phone2, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=")), "GET");
         } catch (MalformedURLException | InterruptedException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        return 400;
     }
 
     public void navigateToStatements() {
         UI.getCurrent().navigate("statement");
+    }
+
+    public int addPerson(String id, String idTypeSelected, String date, String name, String email, String phone1, String phone2) {
+        try {
+            Thread.sleep(500);
+            return Common.makeApiCall(new URL(("http://localhost:8081/insertPerson?id="+URLEncoder.encode(id+"&idTypeSelected="+idTypeSelected+"&date="+date+"&name="+name+"&email="+email+"&phone1="+phone1+"&phone2="+phone2, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=")), "GET");
+        } catch (MalformedURLException | InterruptedException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return 400;
     }
 }

@@ -63,16 +63,18 @@ public class AddBeneficiaryForm extends FormLayout {
                             beneficiaryView.checkBeneficiaryAddition();
                             clearForm();
                             Notification.show("Added successfully");
+                        } else {
+                            Notification.show("No se puede ingresar beneficiario. Revise los campos");
                         }
                     } else {
-                        kinship.setHelperText("Please choose an option");
+                        Notification.show("Porfavor seleccione una opción");
                     }
 
                 } else {
-                    percentage.setErrorMessage("Percentage must be numeric");
+                    Notification.show("El porcentaje debe ser numérico");
                 }
             } else {
-                id.setErrorMessage("Id must be numeric");
+                Notification.show("La identificación debe ser numerica");
 
             }
         });
