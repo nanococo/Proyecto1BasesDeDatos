@@ -119,4 +119,12 @@ public class TestController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping(value = "/getMovements", produces = MediaType.APPLICATION_JSON_VALUE)
+    public MovementHolder testLogin(@RequestParam(value = "accountId") String value,
+                                    @RequestParam(value = "startDate") String value2,
+                                    @RequestParam(value = "endDate") String value3){
+        return SQLConnection.getInstance().getMovements(value, value2, value3);
+    }
+
 }
