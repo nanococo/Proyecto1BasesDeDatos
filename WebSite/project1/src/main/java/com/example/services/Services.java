@@ -142,4 +142,26 @@ public class Services {
         }
         return 400;
     }
+
+    public void navigateToMovements() {
+        UI.getCurrent().navigate("movement");
+    }
+
+    public ArrayList<Movement> getMovements() {
+        ArrayList<Movement> movements = null;
+        try {
+            MovementHolder movementHolder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getMovements?accountId="+Common.accountId+"&startDate="+Common.startDate+"&endDate="+Common.endDate);
+            movementHolder = gson.fromJson(jsonString, MovementHolder.class);
+
+            movements = movementHolder.getMovements();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return movements;
+    }
 }

@@ -10,6 +10,8 @@ public class Common {
     public static String username = "imendez";
     public static int accountId = 35;
     public static boolean isAdmin = false;
+    public static String startDate = "";
+    public static String endDate = "";
 
     /**
      * @param url is the url
