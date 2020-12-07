@@ -164,4 +164,8 @@ public class Services {
         }
         return movements;
     }
+
+    public void navigateToObjectiveAccounts() {
+        UI.getCurrent().navigate("objective");
+    }
 }

@@ -127,4 +127,18 @@ public class TestController {
         return SQLConnection.getInstance().getMovements(value, value2, value3);
     }
 
+    @GetMapping(value = "/insertObjectiveAccount")
+    public ResponseEntity<?> insertObjectiveAccount(@RequestParam(value = "accountId") String value,
+                                                    @RequestParam(value = "startDate") String value2,
+                                                    @RequestParam(value = "endDate") String value3,
+                                                    @RequestParam(value = "dayOfSavings") String value4,
+                                                    @RequestParam(value = "amount") String value5,
+                                                    @RequestParam(value = "description") String value6){
+        if(SQLConnection.getInstance().insertObjectiveAccount(value, value2, value3, value4, value5, value6)){
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }
