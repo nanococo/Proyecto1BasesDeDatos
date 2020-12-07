@@ -444,6 +444,8 @@ public class SQLConnection {
                 proc.setDate(3, Date.valueOf(endDate));
             }
 
+            //Hello
+
             ResultSet test = proc.executeQuery();
 
             while(test.next()) {
@@ -473,4 +475,41 @@ public class SQLConnection {
         }
         return new MovementHolder();
     }
+
+
+    public boolean insertObjectiveAccount(String accountId, String startDate, String endDate, String dayOfSavings, String amount, String description) {
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{? = call sp_insertarCuentaObjetivo(?,?,?,?,?,?)}");
+            proc.registerOutParameter(1, Types.INTEGER);
+
+            proc.setString(2, accountId);
+            proc.setDate(3, Date.valueOf(startDate));
+            proc.setDate(4, Date.valueOf(endDate));
+            proc.setInt(5, Integer.parseInt(dayOfSavings));
+            proc.setFloat(6, Float.parseFloat(amount));
+            proc.setString(7, description);
+
+            proc.execute();
+            int ret = proc.getInt(1);
+            connection.close();
+
+            return ret==1;
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (Exception f){
+                f.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+
 }

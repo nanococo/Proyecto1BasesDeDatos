@@ -22,7 +22,14 @@ public class HomeView extends VerticalLayout {
     private final Grid<Account> dataGrid = new Grid<>(Account.class);
     private final AddBeneficiaryForm addBeneficiaryForm;
 
+    private final Services service;
+
+    private final Button objectiveAccountButton = new Button("Cuentas Objetivo");
+
     public HomeView(@Autowired Services service){
+
+        this.service = service;
+
         addBeneficiaryForm = new AddBeneficiaryForm(service);
         setSizeFull();
 
@@ -42,7 +49,11 @@ public class HomeView extends VerticalLayout {
 
         button2.addClickListener(buttonClickEvent -> service.navigateToStatements());
 
-        horizontalLayout.add(button, button2);
+
+        configureObjectiveAccountButton();
+
+
+        horizontalLayout.add(button, button2, objectiveAccountButton);
 
 
         dataGrid.setItems(service.getAccounts());
@@ -63,5 +74,11 @@ public class HomeView extends VerticalLayout {
 
         setSizeFull();
         add(header, horizontalLayout, dataGrid);
+    }
+
+    private void configureObjectiveAccountButton() {
+        objectiveAccountButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        objectiveAccountButton.setEnabled(false);
+        objectiveAccountButton.addClickListener(buttonClickEvent -> service.navigateToObjectiveAccounts());
     }
 }
