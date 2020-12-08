@@ -512,4 +512,77 @@ public class SQLConnection {
     }
 
 
+    public ObjectiveAccountHolder getObjectiveAccounts(String accountId) {
+        ArrayList<ObjectiveAccount> statements = new ArrayList<>();
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{call sp_getObjectiveAccounts(?)}");
+            proc.setString(1, accountId);
+
+            ResultSet test = proc.executeQuery();
+
+            while(test.next()) {
+                statements.add(new ObjectiveAccount(
+                        Integer.parseInt(test.getString(1)),
+                        Integer.parseInt(test.getString(2)),
+                        test.getString(3),
+                        test.getString(4),
+                        test.getString(5),
+                        test.getString(6),
+                        test.getString(7),
+                        test.getString(8).equals("1")
+                ));
+            }
+
+            connection.close();
+            return new ObjectiveAccountHolder(statements);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (Exception f){
+                f.printStackTrace();
+            }
+        }
+        return new ObjectiveAccountHolder();
+    }
+
+    public boolean updateObjectiveAccount(String id, String amount, String description, String startDate, String endDate, String processDate) {
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{? = call sp_editarCuentaObjetivo(?,?,?,?,?,?)}");
+
+            proc.registerOutParameter(1, Types.INTEGER);
+
+            proc.setInt(2, Integer.parseInt(id));
+            proc.setFloat(3, Float.parseFloat(amount));
+            proc.setString(4, description);
+            proc.setDate(5, Date.valueOf(startDate));
+            proc.setDate(6, Date.valueOf(endDate));
+            proc.setInt(7, Integer.parseInt(processDate));
+
+            proc.execute();
+            int ret = proc.getInt(1);
+            connection.close();
+            return ret==1;
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (Exception f){
+                f.printStackTrace();
+            }
+        }
+        return false;
+    }
 }

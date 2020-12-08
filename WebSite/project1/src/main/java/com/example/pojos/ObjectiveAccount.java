@@ -1,4 +1,4 @@
-package com.testApi.p1Api.Pojos;
+package com.example.pojos;
 
 public class ObjectiveAccount {
     private int id;

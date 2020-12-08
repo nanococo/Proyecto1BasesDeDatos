@@ -141,4 +141,22 @@ public class TestController {
         }
     }
 
+    @GetMapping(value = "/getObjectiveAccounts", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ObjectiveAccountHolder getObjectiveAccounts(@RequestParam(value = "accountId") String value){
+        return SQLConnection.getInstance().getObjectiveAccounts(value);
+    }
+
+    @GetMapping(value = "/updateObjectiveAccount")
+    public ResponseEntity<?> updateObjectiveAccount(@RequestParam(value = "id") String value,
+                                                    @RequestParam(value = "amount") String value2,
+                                                    @RequestParam(value = "description") String value3,
+                                                    @RequestParam(value = "startDate") String value4,
+                                                    @RequestParam(value = "endDate") String value5,
+                                                    @RequestParam(value = "processDate") String value6){
+        if(SQLConnection.getInstance().updateObjectiveAccount(value, value2, value3, value4, value5, value6)){
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 }

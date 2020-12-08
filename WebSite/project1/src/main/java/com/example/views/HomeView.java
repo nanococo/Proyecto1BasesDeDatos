@@ -64,6 +64,7 @@ public class HomeView extends VerticalLayout {
             Notification.show(String.valueOf(Common.accountId));
             button2.setEnabled(true);
             button.setEnabled(true);
+            objectiveAccountButton.setEnabled(true);
         });
 
         dataGrid.getColumns().forEach(col -> col.setAutoWidth(true));
