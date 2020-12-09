@@ -5,16 +5,46 @@ public class Statement {
     private int accountId;
     private String startDate;
     private String endDate;
+    private int cantRetATM;
+    private int cantRetWindow;
+    private String minBalance;
     private String initialBalance;
     private String endBalance;
 
-    public Statement(int statementId, int accountId, String startDate, String endDate, String initialBalance, String endBalance) {
+    public Statement(int statementId, int accountId, String startDate, String endDate, int cantRetATM, int cantRetWindow, String minBalance, String initialBalance, String endBalance) {
         this.statementId = statementId;
         this.accountId = accountId;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.cantRetATM = cantRetATM;
+        this.cantRetWindow = cantRetWindow;
+        this.minBalance = minBalance;
         this.initialBalance = initialBalance;
         this.endBalance = endBalance;
+    }
+
+    public String getMinBalance() {
+        return minBalance;
+    }
+
+    public void setMinBalance(String minBalance) {
+        this.minBalance = minBalance;
+    }
+
+    public int getCantRetATM() {
+        return cantRetATM;
+    }
+
+    public void setCantRetATM(int cantRetATM) {
+        this.cantRetATM = cantRetATM;
+    }
+
+    public int getCantRetWindow() {
+        return cantRetWindow;
+    }
+
+    public void setCantRetWindow(int cantRetWindow) {
+        this.cantRetWindow = cantRetWindow;
     }
 
     public int getStatementId() {
