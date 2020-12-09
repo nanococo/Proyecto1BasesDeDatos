@@ -74,7 +74,6 @@ public class BeneficiaryView extends VerticalLayout {
         configureButton4();
         configureButton5();
 
-
         horizontalLayout.add(button, button2, button3, button5, button4);
 
         configureDataGrid();

@@ -168,4 +168,54 @@ public class Services {
     public void navigateToObjectiveAccounts() {
         UI.getCurrent().navigate("objective");
     }
+
+    public ArrayList<ObjectiveAccount> getObjectiveAccounts() {
+        ArrayList<ObjectiveAccount> objectiveAccounts = null;
+        try {
+            ObjectiveAccountHolder objectiveAccountHolder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getObjectiveAccounts?accountId="+Common.accountId);
+            objectiveAccountHolder = gson.fromJson(jsonString, ObjectiveAccountHolder.class);
+
+            objectiveAccounts = objectiveAccountHolder.getObjectiveAccounts();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return objectiveAccounts;
+    }
+
+    public int addObjectiveAccount(String amount, String description, String startDate, String endDate, String dayOfPayment){
+        try {
+            Thread.sleep(500);
+            return Common.makeApiCall(new URL(("http://localhost:8081/insertObjectiveAccount?accountId="+Common.accountId+URLEncoder.encode("&startDate="+startDate+"&endDate="+endDate+"&dayOfSavings="+dayOfPayment+"&amount="+amount+"&description="+description, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=")), "GET");
+        } catch (MalformedURLException | InterruptedException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return 400;
+    }
+
+    public int updateObjectiveAccount(int id, String amount, String description, String startDate, String endDate, String dayOfPayment) {
+        try {
+            Thread.sleep(500);
+            return Common.makeApiCall(new URL(("http://localhost:8081/updateObjectiveAccount?id="+id+URLEncoder.encode("&amount="+amount+"&description="+description+"&startDate="+startDate+"&endDate="+endDate+"&processDate="+dayOfPayment, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=")), "GET");
+        } catch (MalformedURLException | InterruptedException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return 400;
+
+    }
+
+    public void deleteObjectiveAccounts(ArrayList<ObjectiveAccount> selectedObjectiveAccounts) {
+        for (ObjectiveAccount selectedObjectiveAccount : selectedObjectiveAccounts) {
+            try {
+                Thread.sleep(500);
+                Common.makeApiCall(new URL("http://localhost:8081/deleteObjectiveAccount?id="+selectedObjectiveAccount.getId()), "GET");
+            } catch (MalformedURLException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

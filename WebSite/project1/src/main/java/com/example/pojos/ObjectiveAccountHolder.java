@@ -1,4 +1,4 @@
-package com.testApi.p1Api.Pojos;
+package com.example.pojos;
 
 import java.util.ArrayList;
 
