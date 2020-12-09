@@ -2,11 +2,14 @@ package com.example.views;
 
 import com.example.pojos.Movement;
 import com.example.services.Services;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,15 +21,34 @@ public class MovementView extends VerticalLayout {
 
     private final Services services;
 
+    private final TextField filter = new TextField("Filter");
+    private final Button filterBtn = new Button("Go");
+
 //    private final Button viewMovements = new Button("Movimientos");
 
     public MovementView(@Autowired Services services) {
         this.services = services;
 
         H1 h1 = new H1("Movimientos del Estado de Cuenta");
+        HorizontalLayout horizontalLayout = new HorizontalLayout(filter, filterBtn);
+        horizontalLayout.setAlignItems(Alignment.BASELINE);
+
         configureDataGrid();
+        configureFilterBtn();
+
+
         setSizeFull();
-        add(h1, dataGrid);
+        add(h1, horizontalLayout, dataGrid);
+    }
+
+    private void configureFilterBtn() {
+        filterBtn.addClickListener(buttonClickEvent -> {
+           if(filter.getValue().equals("")){
+               dataGrid.setItems(services.getMovements());
+           }else{
+               dataGrid.setItems(services.filterMovements(filter.getValue()));
+           }
+        });
     }
 
 

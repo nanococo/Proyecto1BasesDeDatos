@@ -169,5 +169,11 @@ public class TestController {
         }
     }
 
-
+    @GetMapping(value = "/getMovementsFiltered", produces = MediaType.APPLICATION_JSON_VALUE)
+    public MovementHolder getMovementsFiltered(@RequestParam(value = "accountId") String value,
+                                               @RequestParam(value = "startDate") String value2,
+                                               @RequestParam(value = "endDate") String value3,
+                                               @RequestParam(value = "filter") String value4){
+        return SQLConnection.getInstance().getMovementsFiltered(value, value2, value3, value4);
+    }
 }

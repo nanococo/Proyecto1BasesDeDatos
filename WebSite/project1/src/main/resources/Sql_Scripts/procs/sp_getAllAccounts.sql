@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_getAccounts]    Script Date: 08/12/2020 9:27:42 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_getAllAccounts]    Script Date: 08/12/2020 9:27:55 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,9 +10,7 @@ GO
 -- Create date: <14/11/2020>
 -- Description:	<SP que obtiene las cuentas de un usuario>
 -- =============================================
-ALTER PROCEDURE [dbo].[sp_getAccounts]
-
-@username VARCHAR(30)
+ALTER PROCEDURE [dbo].[sp_getAllAccounts]
 
 AS
 BEGIN
@@ -24,6 +22,5 @@ BEGIN
     --Selecciona las cuentas relacionadas con un nombre de usuario
     SELECT *
     FROM [dbo].[CuentaAhorros]
-    WHERE [Id] IN (SELECT CuentaId FROM UsuariosVer WHERE UserId = (SELECT Usuarios.Id FROM Usuarios WHERE Usuarios.Username = @username))
 
 END

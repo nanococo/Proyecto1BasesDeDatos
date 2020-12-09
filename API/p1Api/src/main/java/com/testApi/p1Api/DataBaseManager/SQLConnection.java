@@ -613,4 +613,53 @@ public class SQLConnection {
         }
         return false;
     }
+
+    public MovementHolder getMovementsFiltered(String accountId, String startDate, String endDate, String filter) {
+        ArrayList<Movement> statements = new ArrayList<>();
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{call sp_getAllMovementsWithPattern(?,?,?,?)}");
+            proc.setString(1, accountId);
+            proc.setDate(2, Date.valueOf(startDate));
+            if (endDate == null || endDate.equals("null")) {
+                proc.setNull(3, Types.DATE);
+            } else {
+                proc.setDate(3, Date.valueOf(endDate));
+            }
+
+            proc.setString(4, filter);
+
+
+            //Hello
+
+            ResultSet test = proc.executeQuery();
+
+            while (test.next()) {
+                statements.add(new Movement(
+                        Integer.parseInt(test.getString(1)),
+                        Integer.parseInt(test.getString(2)),
+                        Integer.parseInt(test.getString(3)),
+                        test.getString(4),
+                        test.getString(5),
+                        test.getString(6),
+                        test.getString(7)
+                ));
+            }
+
+            connection.close();
+            return new MovementHolder(statements);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception f) {
+                f.printStackTrace();
+            }
+        }
+        return new MovementHolder();
+    }
 }

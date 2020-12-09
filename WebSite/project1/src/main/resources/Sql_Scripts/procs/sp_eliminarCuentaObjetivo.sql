@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_editarCuentaObjetivo]    Script Date: 08/12/2020 9:26:12 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_eliminarCuentaObjetivo]    Script Date: 08/12/2020 9:27:29 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -8,16 +8,11 @@ GO
 -- =============================================
 -- Author:		<Sebas Alpizar>
 -- Create date: <08/12/2020>
--- Description:	<Actualiza una cuenta objetivo>
+-- Description:	<Elimina una cuenta objetivo>
 -- =============================================
-ALTER PROCEDURE [dbo].[sp_editarCuentaObjetivo]
+ALTER PROCEDURE [dbo].[sp_eliminarCuentaObjetivo]
 
-    @inId INT,
-    @inAmount MONEY,
-    @inDescription VARCHAR(50),
-    @inStartDate DATE,
-    @inEndDate DATE,
-    @inProccessDate INT
+@inId INT
 
 AS
 BEGIN
@@ -36,13 +31,9 @@ BEGIN
         BEGIN TRY
 
             UPDATE [dbo].[CuentaObjetivo]
-            SET [SaldoCO] = @inAmount,
-                [Descripcion] = @inDescription,
-                [FechaInicio] = @inStartDate,
-                [FechaFin] = @inEndDate,
-                [DiaAhorro] = @inProccessDate
+            SET [Activo] = 0
 
-            WHERE Id = @inId
+            WHERE [Id] = @inId
             SET @Return_Status = 1
 
         END TRY

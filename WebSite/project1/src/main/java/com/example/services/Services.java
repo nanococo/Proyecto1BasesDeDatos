@@ -218,4 +218,22 @@ public class Services {
             }
         }
     }
+
+    public ArrayList<Movement> filterMovements(String value) {
+        ArrayList<Movement> movements = null;
+        try {
+            MovementHolder movementHolder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getMovementsFiltered?accountId="+Common.accountId+"&startDate="+Common.startDate+"&endDate="+Common.endDate+"&filter="+URLEncoder.encode(value, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=");
+            movementHolder = gson.fromJson(jsonString, MovementHolder.class);
+
+            movements = movementHolder.getMovements();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return movements;
+    }
 }

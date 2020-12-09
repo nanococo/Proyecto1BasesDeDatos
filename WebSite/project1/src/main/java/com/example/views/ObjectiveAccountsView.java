@@ -14,6 +14,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,11 +36,9 @@ public class ObjectiveAccountsView extends VerticalLayout {
 
     private boolean button3Selected = false;
     private final ArrayList<ObjectiveAccount> selectedObjectiveAccounts = new ArrayList<>();
-    private ObjectiveAccount selectedObjectiveAccount;
 
     private final AddObjectiveAccountForm addObjectiveAccountForm;
     private final EditObjectiveAccountForm editObjectiveAccountForm;
-
 
     public ObjectiveAccountsView(@Autowired Services services) {
         this.services = services;
@@ -122,10 +121,8 @@ public class ObjectiveAccountsView extends VerticalLayout {
                 dataGrid.asMultiSelect().addSelectionListener(multiSelectionEvent -> {
                     if(multiSelectionEvent.getFirstSelectedItem().isPresent()){
                         //Notification.show(multiSelectionEvent.getFirstSelectedItem().get().getName());
-                        selectedObjectiveAccount = multiSelectionEvent.getFirstSelectedItem().get();
                         selectedObjectiveAccounts.addAll(multiSelectionEvent.getValue());
                     } else {
-                        selectedObjectiveAccount = null;
                         selectedObjectiveAccounts.clear();
                     }
                 });
