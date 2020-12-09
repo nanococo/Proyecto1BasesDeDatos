@@ -373,8 +373,11 @@ public class SQLConnection {
                         Integer.parseInt(test.getString(2)),
                         test.getString(3),
                         test.getString(4),
-                        test.getString(5),
-                        test.getString(6)
+                        Integer.parseInt(test.getString(5)),
+                        Integer.parseInt(test.getString(6)),
+                        test.getString(7),
+                        test.getString(8),
+                        test.getString(9)
                         ));
             }
 

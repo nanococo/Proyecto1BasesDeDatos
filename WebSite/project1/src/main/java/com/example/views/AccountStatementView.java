@@ -49,7 +49,7 @@ public class AccountStatementView extends VerticalLayout {
         dataGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         dataGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.MATERIAL_COLUMN_DIVIDERS);
         dataGrid.setVerticalScrollingEnabled(true);
-        dataGrid.setColumnOrder(dataGrid.getColumnByKey("statementId"), dataGrid.getColumnByKey("accountId"), dataGrid.getColumnByKey("initialBalance"), dataGrid.getColumnByKey("endBalance"), dataGrid.getColumnByKey("startDate"), dataGrid.getColumnByKey("endDate"));
+        dataGrid.setColumnOrder(dataGrid.getColumnByKey("statementId"), dataGrid.getColumnByKey("accountId"), dataGrid.getColumnByKey("minBalance"), dataGrid.getColumnByKey("initialBalance"), dataGrid.getColumnByKey("endBalance"), dataGrid.getColumnByKey("startDate"), dataGrid.getColumnByKey("endDate"), dataGrid.getColumnByKey("cantRetATM"), dataGrid.getColumnByKey("cantRetWindow"));
         dataGrid.getColumns().forEach(col -> col.setAutoWidth(true));
         dataGrid.asSingleSelect().addValueChangeListener(event -> {
             Common.startDate = event.getValue().getStartDate();
