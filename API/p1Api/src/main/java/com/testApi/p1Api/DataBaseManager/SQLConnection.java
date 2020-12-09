@@ -585,4 +585,32 @@ public class SQLConnection {
         }
         return false;
     }
+
+    public boolean deleteObjectiveAccount(String id){
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{? = call sp_eliminarCuentaObjetivo(?)}");
+
+            proc.registerOutParameter(1, Types.INTEGER);
+            proc.setInt(2, Integer.parseInt(id));
+
+            proc.execute();
+            int ret = proc.getInt(1);
+            connection.close();
+            return ret==1;
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            } catch (Exception f){
+                f.printStackTrace();
+            }
+        }
+        return false;
+    }
 }

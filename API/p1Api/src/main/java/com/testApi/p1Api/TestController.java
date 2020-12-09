@@ -81,6 +81,15 @@ public class TestController {
         }
     }
 
+    @GetMapping(value = "/deleteObjectiveAccount")
+    public ResponseEntity<?> deleteObjectiveAccount(@RequestParam(value = "id") String value){
+        if(SQLConnection.getInstance().deleteObjectiveAccount(value)){
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @GetMapping(value = "/updateBeneficiary")
     public ResponseEntity<?> updateBeneficiary(@RequestParam(value = "personId") String value,
                                   @RequestParam(value = "accountId") String value2,
@@ -159,4 +168,6 @@ public class TestController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
+
 }

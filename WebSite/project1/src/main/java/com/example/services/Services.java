@@ -207,4 +207,15 @@ public class Services {
         return 400;
 
     }
+
+    public void deleteObjectiveAccounts(ArrayList<ObjectiveAccount> selectedObjectiveAccounts) {
+        for (ObjectiveAccount selectedObjectiveAccount : selectedObjectiveAccounts) {
+            try {
+                Thread.sleep(500);
+                Common.makeApiCall(new URL("http://localhost:8081/deleteObjectiveAccount?id="+selectedObjectiveAccount.getId()), "GET");
+            } catch (MalformedURLException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
