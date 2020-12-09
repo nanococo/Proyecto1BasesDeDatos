@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_insertarBeneficiario]    Script Date: 14/11/2020 7:27:25 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_insertarBeneficiario]    Script Date: 08/12/2020 9:30:09 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -29,9 +29,9 @@ BEGIN
     DECLARE @CantBeneficiarios INT
     DECLARE @PorcentajeTotalCuenta INT
 
-	--Variable para manejo de errores (1 si el sp se ejecutó correctamente, 0 si el sp falló)
-	DECLARE @Return_Status INT
-	SET @Return_Status = 0
+    --Variable para manejo de errores (1 si el sp se ejecutó correctamente, 0 si el sp falló)
+    DECLARE @Return_Status INT
+    SET @Return_Status = 0
 
     --Se obtienen los Id de la persona y la cuenta
     SET @PersonaId = (SELECT Id FROM [dbo].[Persona] AS P WHERE @ValorDocIdentidadBeneficiario = P.ValorDocumentoIdentidadDelCliente)
@@ -45,46 +45,48 @@ BEGIN
 
     --Se valida que PorcentajeTotalCuenta no sea nulo
     IF (@PorcentajeTotalCuenta IS NULL)
-    BEGIN
-        SET @PorcentajeTotalCuenta = 0
-    END
+        BEGIN
+            SET @PorcentajeTotalCuenta = 0
+        END
 
     --Si la cantidad de beneficiarios es menor a 3, si el porcentaje de la cuenta es menor a 100 y si la suma del porcentaje total más el porcentaje nuevo es menor o igual a 100, inserta
     IF (@CantBeneficiarios < 3 AND @PorcentajeTotalCuenta < 100 AND @Porcentaje + @PorcentajeTotalCuenta <= 100)
-    BEGIN
+        BEGIN
 
-        --No deja insertar un beneficiario igual a la misma cuenta. También valida si el beneficiario está activo o no. En caso de que exista pero este no está activo, lo inserta
-        IF NOT EXISTS(SELECT * FROM [dbo].[Beneficiarios] AS B WHERE @PersonaId = B.PersonaId AND @CuentaId = B.CuentaAsociadaId AND B.EstaActivo = 1)
-            BEGIN
+            --No deja insertar un beneficiario igual a la misma cuenta. También valida si el beneficiario está activo o no. En caso de que exista pero este no está activo, lo inserta
+            IF NOT EXISTS(SELECT * FROM [dbo].[Beneficiarios] AS B WHERE @PersonaId = B.PersonaId AND @CuentaId = B.CuentaAsociadaId AND B.EstaActivo = 1)
+                BEGIN
 
-				--Try Catch  para manejar errores y almancenarlos en DB_Errores en caso de que ocurran
-				BEGIN TRY
+                    --Try Catch  para manejar errores y almancenarlos en DB_Errores en caso de que ocurran
+                    BEGIN TRY
 
-					--Insercion en tabla Beneficiarios
-					INSERT INTO [dbo].[Beneficiarios] ([PersonaId], [CuentaAsociadaId], [Porcentaje], [ParentescoId])
-					VALUES (@PersonaId, @CuentaId, @Porcentaje, @ParentescoId)
-					SET @Return_Status = 1
+                        --Insercion en tabla Beneficiarios
+                        INSERT INTO [dbo].[Beneficiarios] ([PersonaId], [CuentaAsociadaId], [Porcentaje], [ParentescoId])
+                        VALUES (@PersonaId, @CuentaId, @Porcentaje, @ParentescoId)
+                        SET @Return_Status = 1
 
-				END TRY
+                    END TRY
 
-				BEGIN CATCH
+                    BEGIN CATCH
 
-					--Insercion del error en tabla DB_Errores
-					INSERT INTO [dbo].[DB_Errores]
-					VALUES  (SUSER_SNAME(),
-							ERROR_NUMBER(),
-							ERROR_STATE(),
-							ERROR_SEVERITY(),
-							ERROR_LINE(),
-							ERROR_PROCEDURE(),
-							ERROR_MESSAGE(),
-							GETDATE());
+                        --Insercion del error en tabla DB_Errores
+                        INSERT INTO [dbo].[DB_Errores]
+                        VALUES  (SUSER_SNAME(),
+                                 ERROR_NUMBER(),
+                                 ERROR_STATE(),
+                                 ERROR_SEVERITY(),
+                                 ERROR_LINE(),
+                                 ERROR_PROCEDURE(),
+                                 ERROR_MESSAGE(),
+                                 GETDATE());
 
-				END CATCH
-            END
+                        --RETURN 0
 
-    END 
-		
-	RETURN @Return_Status
+                    END CATCH
+                END
+
+        END
+
+    RETURN @Return_Status
 
 END

@@ -1,18 +1,18 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_getStatementsByAccountId]    Script Date: 14/11/2020 7:27:04 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_getStatementsByAccountId]    Script Date: 08/12/2020 9:29:51 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 -- =============================================
--- Author:		<Sebastián Alpizar>
+-- Author:		<SebastiÃ¡n Alpizar>
 -- Create date: <14/11/2020>
 -- Description:	<SP que obtiene los estados de cuenta con el Id de la cuenta>
 -- =============================================
 ALTER PROCEDURE [dbo].[sp_getStatementsByAccountId]
 
-	@accountId VARCHAR(20)
+@accountId VARCHAR(20)
 
 AS
 BEGIN
@@ -21,9 +21,9 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-	--Select que obtiene los estados de cuenta con el Id de la cuenta
-	SELECT *
-	FROM   [dbo].[EstadoCuenta]
-	WHERE  [CuentaAhorrosId] = @accountId
+    --Select que obtiene los estados de cuenta con el Id de la cuenta
+    SELECT *
+    FROM   [dbo].[EstadoCuenta]
+    WHERE  [CuentaAhorrosId] = @accountId
 
 END

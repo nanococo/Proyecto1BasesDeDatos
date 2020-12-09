@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_eliminarBeneficiario]    Script Date: 14/11/2020 7:25:16 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_eliminarBeneficiario]    Script Date: 08/12/2020 9:26:24 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -21,42 +21,42 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-	--Variable para manejo de errores (1 si el sp se ejecutó correctamente, 0 si el sp falló)
-	DECLARE @Return_Status INT
-	SET @Return_Status = 0
+    --Variable para manejo de errores (1 si el sp se ejecutó correctamente, 0 si el sp falló)
+    DECLARE @Return_Status INT
+    SET @Return_Status = 0
 
     --Cambiar estado y asignar fecha de desactivacion
     DECLARE @Existingdate DATE
     SET @Existingdate = GETDATE()
 
-	--Try Catch  para manejar errores y almancenarlos en DB_Errores en caso de que ocurran
-	BEGIN TRY 
-		
-		--Se realiza el eliminado lógico del Beneficiario y se asigna la fecha de desactivación
-		UPDATE [dbo].[Beneficiarios]
-		SET
-			EstaActivo = 0,
-			FechaDesactivacion = CONVERT(VARCHAR, @Existingdate, 21)
+    --Try Catch  para manejar errores y almancenarlos en DB_Errores en caso de que ocurran
+    BEGIN TRY
 
-		WHERE Id = @IdBeneficiario AND CuentaAsociadaId = @IdCuentaAsociada
+        --Se realiza el eliminado lógico del Beneficiario y se asigna la fecha de desactivación
+        UPDATE [dbo].[Beneficiarios]
+        SET
+            EstaActivo = 0,
+            FechaDesactivacion = CONVERT(VARCHAR, @Existingdate, 21)
 
-		SET @Return_Status = 1
+        WHERE Id = @IdBeneficiario AND CuentaAsociadaId = @IdCuentaAsociada
 
-	END TRY
+        SET @Return_Status = 1
 
-	BEGIN CATCH 
-		--Insercion del error en tabla DB_Errores
-		INSERT INTO [dbo].[DB_Errores]
-		VALUES  (SUSER_SNAME(),
-				ERROR_NUMBER(),
-				ERROR_STATE(),
-				ERROR_SEVERITY(),
-				ERROR_LINE(),
-				ERROR_PROCEDURE(),
-				ERROR_MESSAGE(),
-				GETDATE());
-	END CATCH
+    END TRY
 
-	RETURN @Return_Status
+    BEGIN CATCH
+        --Insercion del error en tabla DB_Errores
+        INSERT INTO [dbo].[DB_Errores]
+        VALUES  (SUSER_SNAME(),
+                 ERROR_NUMBER(),
+                 ERROR_STATE(),
+                 ERROR_SEVERITY(),
+                 ERROR_LINE(),
+                 ERROR_PROCEDURE(),
+                 ERROR_MESSAGE(),
+                 GETDATE());
+    END CATCH
+
+    RETURN @Return_Status
 
 END

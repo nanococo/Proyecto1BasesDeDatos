@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_insertarPersona]    Script Date: 15/11/2020 12:37:23 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_insertarPersona]    Script Date: 08/12/2020 9:30:33 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

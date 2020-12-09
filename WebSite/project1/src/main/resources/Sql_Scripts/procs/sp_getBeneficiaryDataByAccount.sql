@@ -1,18 +1,18 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_getBeneficiaryDataByAccount]    Script Date: 14/11/2020 7:26:19 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_getBeneficiaryDataByAccount]    Script Date: 08/12/2020 9:28:31 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 -- =============================================
--- Author:		<Sebastián Alpizar>
+-- Author:		<SebastiÃ¡n Alpizar>
 -- Create date: <14/11/2020>
 -- Description:	<SP que obtiene los datos del beneficiario a partir del Id de la cuenta>
 -- =============================================
-ALTER PROCEDURE [dbo].[sp_getBeneficiaryDataByAccount] 
+ALTER PROCEDURE [dbo].[sp_getBeneficiaryDataByAccount]
 
-	@accountId VARCHAR (30)
+@accountId VARCHAR (30)
 
 AS
 BEGIN
@@ -21,12 +21,12 @@ BEGIN
     -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
-	SELECT * 
-	FROM [dbo].[Persona], [dbo].[Beneficiarios]
-	WHERE [dbo].[Persona].[Id] IN (SELECT [PersonaId]
-							FROM [dbo].[Beneficiarios]
-							WHERE [dbo].[Beneficiarios].[CuentaAsociadaId] = @accountId)
-							AND [dbo].[Beneficiarios].[CuentaAsociadaId] = @accountId
-							AND [dbo].[Persona].[Id] = [dbo].[Beneficiarios].[PersonaId]
-							AND [Beneficiarios].[EstaActivo] = '1'
+    SELECT *
+    FROM [dbo].[Persona], [dbo].[Beneficiarios]
+    WHERE [dbo].[Persona].[Id] IN (SELECT [PersonaId]
+                                   FROM [dbo].[Beneficiarios]
+                                   WHERE [dbo].[Beneficiarios].[CuentaAsociadaId] = @accountId)
+      AND [dbo].[Beneficiarios].[CuentaAsociadaId] = @accountId
+      AND [dbo].[Persona].[Id] = [dbo].[Beneficiarios].[PersonaId]
+      AND [Beneficiarios].[EstaActivo] = '1'
 END
