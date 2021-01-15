@@ -14,7 +14,6 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,7 +30,7 @@ public class ObjectiveAccountsView extends VerticalLayout {
     private final Button addObjectiveAccount = new Button("Agregar Cuenta");
     private final Button editObjectiveAccount = new Button("Editar Cuenta");
 
-    private final Button button3 = new Button("Eliminar Beneficiarios");
+    private final Button button3 = new Button("Eliminar Cuenta");
     private final Button button4 = new Button(new Icon(VaadinIcon.TRASH));
 
     private boolean button3Selected = false;
