@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 15/01/2021 3:54:12 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 15/01/2021 6:53:56 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -203,7 +203,7 @@ BEGIN
                             [Descripcion]
                         )
 
-                        SELECT	[NumeroCuentaAhorro],
+                        SELECT	C.[Id],
                                   [FechaInicio],
                                   [FechaFinal],
                                   [DiaAhorro],
@@ -212,13 +212,14 @@ BEGIN
 
                         FROM OPENXML (@hdoc, 'Operaciones/FechaOperacion/CuentaAhorro', 1)
                                       WITH (	[Fecha] DATE '../@Fecha',
-                                          [NumeroCuentaAhorro] INT,
+                                          [NumeroCuentaPrimaria] INT,
                                           [FechaInicio] DATE '../@Fecha',
                                           [FechaFinal] DATE,
                                           [DiaAhorro] INT,
                                           [MontoAhorro] INT,
                                           [Descripcion] VARCHAR(50)) AS D
-
+                                 INNER JOIN [dbo].[CuentaAhorros] as C
+                                            ON D.[NumeroCuentaPrimaria] = C.NumeroCuenta
                         WHERE [Fecha] = @fechaInicio
 
 
@@ -229,7 +230,30 @@ BEGIN
 
                         --Procesar Depositos CO
 
-                        --IF @fechaInicio =
+                        DECLARE @cuentaId INT = (
+                            SELECT C.[Id]
+                            FROM OPENXML (@hdoc, 'Operaciones/FechaOperacion/CuentaAhorro', 1)
+                                          WITH (	[Fecha] DATE '../@Fecha',
+                                              [NumeroCuentaPrimaria] INT
+                                              ) AS D
+                                     INNER JOIN [dbo].[CuentaAhorros] AS C
+                                                ON D.[NumeroCuentaPrimaria] = C.NumeroCuenta
+                            WHERE [Fecha] = @fechaInicio
+                        )
+
+                        DECLARE @cuentaPadreId INT = (
+                            SELECT [NumeroCuentaPrimaria]
+                            FROM OPENXML (@hdoc, 'Operaciones/FechaOperacion/CuentaAhorro', 1)
+                                          WITH (	[Fecha] DATE '../@Fecha',
+                                              [NumeroCuentaPrimaria] INT
+                                              ) AS D
+                            WHERE [Fecha] = @fechaInicio
+                        )
+
+                        IF DATEPART(DAY, @fechaInicio) = (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaId)
+                            BEGIN
+
+                            END
 
 
 
