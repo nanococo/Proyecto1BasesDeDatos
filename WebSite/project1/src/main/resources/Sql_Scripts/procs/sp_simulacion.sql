@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 15/01/2021 6:53:56 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 18/01/2021 4:06:09 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -199,7 +199,7 @@ BEGIN
                             [FechaInicio],
                             [FechaFin],
                             [DiaAhorro],
-                            [SaldoCO],
+                            [MontoAhorro],
                             [Descripcion]
                         )
 
@@ -228,34 +228,56 @@ BEGIN
 
                         ---------------------INICIO DEL PROCESO DE CIERRE DE ESTADOS DE CUENTA---------------------
 
-                        --Procesar Depositos CO
 
-                        DECLARE @cuentaId INT = (
-                            SELECT C.[Id]
-                            FROM OPENXML (@hdoc, 'Operaciones/FechaOperacion/CuentaAhorro', 1)
-                                          WITH (	[Fecha] DATE '../@Fecha',
-                                              [NumeroCuentaPrimaria] INT
-                                              ) AS D
-                                     INNER JOIN [dbo].[CuentaAhorros] AS C
-                                                ON D.[NumeroCuentaPrimaria] = C.NumeroCuenta
-                            WHERE [Fecha] = @fechaInicio
-                        )
+                        DECLARE @cuentaObjetivoId INT
+                        DECLARE @cuentaAhorroId   INT
 
-                        DECLARE @cuentaPadreId INT = (
-                            SELECT [NumeroCuentaPrimaria]
-                            FROM OPENXML (@hdoc, 'Operaciones/FechaOperacion/CuentaAhorro', 1)
-                                          WITH (	[Fecha] DATE '../@Fecha',
-                                              [NumeroCuentaPrimaria] INT
-                                              ) AS D
-                            WHERE [Fecha] = @fechaInicio
-                        )
+                        DECLARE cursor_CO CURSOR
+                            FOR SELECT Id, CuentaAhorrosId FROM [dbo].[CuentaObjetivo] AS CO WHERE CO.[FechaInicio] = @fechaInicio
 
-                        IF DATEPART(DAY, @fechaInicio) = (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaId)
+                        OPEN cursor_CO
+                        FETCH NEXT FROM cursor_CO INTO
+                            @cuentaObjetivoId,
+                            @cuentaAhorroId;
+
+                        WHILE @@FETCH_STATUS = 0
                             BEGIN
+                                IF DATEPART(DAY, @fechaInicio) = DATEPART(DAY, (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId))
+                                    BEGIN
 
+                                        DECLARE @montoActual MONEY = (SELECT Saldo FROM [dbo].[CuentaAhorros] WHERE Id = @cuentaAhorroId)
+                                        DECLARE @montoAhorro MONEY = (SELECT MontoAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                                        DECLARE @saldoCO MONEY = (SELECT SaldoCO FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+
+                                        IF @montoActual-@montoAhorro > 0
+                                            BEGIN
+
+                                                BEGIN TRANSACTION UpdateCuentaObjetivoValues
+
+                                                    UPDATE [dbo].[CuentaAhorros]
+                                                    SET Saldo = (@montoActual - @montoAhorro)
+                                                    WHERE Id = @cuentaAhorroId
+
+                                                    UPDATE [dbo].[CuentaObjetivo]
+                                                    SET SaldoCO = (@saldoCO + @montoAhorro)
+                                                    WHERE Id = @cuentaObjetivoId
+
+                                                    INSERT INTO [dbo].[MovimientosCO] (CuentaObjetivoId, TipoMovCO, Fecha, Monto, NuevoSaldo)
+                                                    VALUES (@cuentaObjetivoId, 1, @fechaInicio, @montoAhorro, (@saldoCO + @montoAhorro))
+
+                                                COMMIT TRANSACTION UpdateCuentaObjetivoValues
+
+                                            END
+                                    END
+
+
+                                FETCH NEXT FROM cursor_CO INTO
+                                    @cuentaObjetivoId,
+                                    @cuentaAhorroId
                             END
 
-
+                        CLOSE cursor_CO
+                        DEALLOCATE cursor_CO
 
 
                     END
