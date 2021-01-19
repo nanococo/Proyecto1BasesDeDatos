@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 18/01/2021 4:06:09 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 18/01/2021 8:48:18 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -233,7 +233,7 @@ BEGIN
                         DECLARE @cuentaAhorroId   INT
 
                         DECLARE cursor_CO CURSOR
-                            FOR SELECT Id, CuentaAhorrosId FROM [dbo].[CuentaObjetivo] AS CO WHERE CO.[FechaInicio] = @fechaInicio
+                            FOR SELECT Id, CuentaAhorrosId FROM [dbo].[CuentaObjetivo]
 
                         OPEN cursor_CO
                         FETCH NEXT FROM cursor_CO INTO
@@ -242,8 +242,10 @@ BEGIN
 
                         WHILE @@FETCH_STATUS = 0
                             BEGIN
-                                IF DATEPART(DAY, @fechaInicio) = DATEPART(DAY, (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId))
+
+                                IF DATEPART(DAY, @fechaInicio) = (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
                                     BEGIN
+
 
                                         DECLARE @montoActual MONEY = (SELECT Saldo FROM [dbo].[CuentaAhorros] WHERE Id = @cuentaAhorroId)
                                         DECLARE @montoAhorro MONEY = (SELECT MontoAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
@@ -268,6 +270,17 @@ BEGIN
                                                 COMMIT TRANSACTION UpdateCuentaObjetivoValues
 
                                             END
+
+                                    END
+                                ELSE
+                                    BEGIN
+
+                                        IF @fechaInicio = (SELECT FechaFin FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                                            BEGIN
+                                                --TEST
+                                                select * from persona
+                                            END
+
                                     END
 
 
