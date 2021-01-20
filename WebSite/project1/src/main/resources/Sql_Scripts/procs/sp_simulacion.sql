@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 18/01/2021 8:48:18 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 19/01/2021 3:41:37 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -225,75 +225,105 @@ BEGIN
 
                         ---------------------FIN DE LA INCERCIÓN DE DATOS---------------------
 
+                    END
 
-                        ---------------------INICIO DEL PROCESO DE CIERRE DE ESTADOS DE CUENTA---------------------
+                ---------------------INICIO DEL PROCESO DE CUENTA OBJETIVO---------------------
 
 
-                        DECLARE @cuentaObjetivoId INT
-                        DECLARE @cuentaAhorroId   INT
+                DECLARE @cuentaObjetivoId INT
+                DECLARE @cuentaAhorroId   INT
 
-                        DECLARE cursor_CO CURSOR
-                            FOR SELECT Id, CuentaAhorrosId FROM [dbo].[CuentaObjetivo]
+                DECLARE cursor_CO CURSOR
+                    FOR SELECT Id, CuentaAhorrosId FROM [dbo].[CuentaObjetivo]
 
-                        OPEN cursor_CO
-                        FETCH NEXT FROM cursor_CO INTO
-                            @cuentaObjetivoId,
-                            @cuentaAhorroId;
+                OPEN cursor_CO
+                FETCH NEXT FROM cursor_CO INTO
+                    @cuentaObjetivoId,
+                    @cuentaAhorroId;
 
-                        WHILE @@FETCH_STATUS = 0
+                WHILE @@FETCH_STATUS = 0
+                    BEGIN
+
+                        --Proceso de Intereses
+                        DECLARE @fechaDeInicioCO DATE = (SELECT fechaInicio FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                        DECLARE @fechaDeFinCO DATE = (SELECT fechaInicio FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                        DECLARE @saldoCO MONEY = (SELECT SaldoCO FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+
+                        IF @fechaInicio < @fechaDeFinCO
                             BEGIN
+                                PRINT('HERE')
 
-                                IF DATEPART(DAY, @fechaInicio) = (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
-                                    BEGIN
+                                DECLARE @mesesEntreFechas INT = CAST(ROUND(ABS(DATEDIFF(MONTH, @fechaDeInicioCO, @fechaDeFinCO)), 0) AS INT)
+                                DECLARE @porcentajeInteres FLOAT = (0.5 * @mesesEntreFechas)/365
 
+                                DECLARE @interesAcumulado MONEY = (SELECT InteresAcumulado FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                                DECLARE @interesAgregado MONEY = @interesAcumulado + (@saldoCO * @porcentajeInteres)
 
-                                        DECLARE @montoActual MONEY = (SELECT Saldo FROM [dbo].[CuentaAhorros] WHERE Id = @cuentaAhorroId)
-                                        DECLARE @montoAhorro MONEY = (SELECT MontoAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
-                                        DECLARE @saldoCO MONEY = (SELECT SaldoCO FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                                BEGIN TRANSACTION ActualizarIntereses
 
-                                        IF @montoActual-@montoAhorro > 0
-                                            BEGIN
+                                    UPDATE [dbo].[CuentaObjetivo]
+                                    SET InteresAcumulado = @interesAgregado
+                                    WHERE Id = @cuentaObjetivoId
 
-                                                BEGIN TRANSACTION UpdateCuentaObjetivoValues
+                                    INSERT INTO [dbo].[MovimientosInteresCO] (CuentaObjetivoId, TipoMovInteresCO, Fecha, Monto, Descripcion)
+                                    VALUES (@cuentaObjetivoId, 2, @fechaInicio, @interesAcumulado, 'Interes Diario')
 
-                                                    UPDATE [dbo].[CuentaAhorros]
-                                                    SET Saldo = (@montoActual - @montoAhorro)
-                                                    WHERE Id = @cuentaAhorroId
+                                COMMIT TRANSACTION ActualizarIntereses
 
-                                                    UPDATE [dbo].[CuentaObjetivo]
-                                                    SET SaldoCO = (@saldoCO + @montoAhorro)
-                                                    WHERE Id = @cuentaObjetivoId
-
-                                                    INSERT INTO [dbo].[MovimientosCO] (CuentaObjetivoId, TipoMovCO, Fecha, Monto, NuevoSaldo)
-                                                    VALUES (@cuentaObjetivoId, 1, @fechaInicio, @montoAhorro, (@saldoCO + @montoAhorro))
-
-                                                COMMIT TRANSACTION UpdateCuentaObjetivoValues
-
-                                            END
-
-                                    END
-                                ELSE
-                                    BEGIN
-
-                                        IF @fechaInicio = (SELECT FechaFin FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
-                                            BEGIN
-                                                --TEST
-                                                select * from persona
-                                            END
-
-                                    END
-
-
-                                FETCH NEXT FROM cursor_CO INTO
-                                    @cuentaObjetivoId,
-                                    @cuentaAhorroId
                             END
 
-                        CLOSE cursor_CO
-                        DEALLOCATE cursor_CO
+                        --Proceso del Ahorro
+                        IF DATEPART(DAY, @fechaInicio) = (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                            BEGIN
 
 
+                                DECLARE @montoActual MONEY = (SELECT Saldo FROM [dbo].[CuentaAhorros] WHERE Id = @cuentaAhorroId)
+                                DECLARE @montoAhorro MONEY = (SELECT MontoAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+
+
+                                IF @montoActual-@montoAhorro > 0
+                                    BEGIN
+
+                                        BEGIN TRANSACTION UpdateCuentaObjetivoValues
+
+                                            UPDATE [dbo].[CuentaAhorros]
+                                            SET Saldo = (@montoActual - @montoAhorro)
+                                            WHERE Id = @cuentaAhorroId
+
+                                            UPDATE [dbo].[CuentaObjetivo]
+                                            SET SaldoCO = (@saldoCO + @montoAhorro)
+                                            WHERE Id = @cuentaObjetivoId
+
+                                            INSERT INTO [dbo].[MovimientosCO] (CuentaObjetivoId, TipoMovCO, Fecha, Monto, NuevoSaldo)
+                                            VALUES (@cuentaObjetivoId, 1, @fechaInicio, @montoAhorro, (@saldoCO + @montoAhorro))
+
+                                        COMMIT TRANSACTION UpdateCuentaObjetivoValues
+
+                                    END
+
+                            END
+                        --ELSE
+                        --BEGIN
+
+                        --	IF @fechaInicio = (SELECT FechaFin FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                        --	BEGIN
+                        --TEST
+                        --	select * from persona
+                        --	END
+
+                        --END
+
+
+                        FETCH NEXT FROM cursor_CO INTO
+                            @cuentaObjetivoId,
+                            @cuentaAhorroId
                     END
+
+                CLOSE cursor_CO
+                DEALLOCATE cursor_CO
+
+
+
 
                 SET @fechaInicio = DATEADD(dd,1,@fechaInicio)
 
