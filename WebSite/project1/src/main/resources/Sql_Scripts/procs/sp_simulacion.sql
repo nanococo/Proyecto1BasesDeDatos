@@ -246,12 +246,11 @@ BEGIN
 
                         --Proceso de Intereses
                         DECLARE @fechaDeInicioCO DATE = (SELECT fechaInicio FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
-                        DECLARE @fechaDeFinCO DATE = (SELECT fechaInicio FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                        DECLARE @fechaDeFinCO DATE = (SELECT FechaFin FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
                         DECLARE @saldoCO MONEY = (SELECT SaldoCO FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
 
                         IF @fechaInicio < @fechaDeFinCO
                             BEGIN
-                                PRINT('HERE')
 
                                 DECLARE @mesesEntreFechas INT = CAST(ROUND(ABS(DATEDIFF(MONTH, @fechaDeInicioCO, @fechaDeFinCO)), 0) AS INT)
                                 DECLARE @porcentajeInteres FLOAT = (0.5 * @mesesEntreFechas)/365
@@ -259,16 +258,22 @@ BEGIN
                                 DECLARE @interesAcumulado MONEY = (SELECT InteresAcumulado FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
                                 DECLARE @interesAgregado MONEY = @interesAcumulado + (@saldoCO * @porcentajeInteres)
 
-                                BEGIN TRANSACTION ActualizarIntereses
+                                IF @interesAgregado > 0
+                                    BEGIN
 
-                                    UPDATE [dbo].[CuentaObjetivo]
-                                    SET InteresAcumulado = @interesAgregado
-                                    WHERE Id = @cuentaObjetivoId
+                                        BEGIN TRANSACTION ActualizarIntereses
 
-                                    INSERT INTO [dbo].[MovimientosInteresCO] (CuentaObjetivoId, TipoMovInteresCO, Fecha, Monto, Descripcion)
-                                    VALUES (@cuentaObjetivoId, 2, @fechaInicio, @interesAcumulado, 'Interes Diario')
+                                            UPDATE [dbo].[CuentaObjetivo]
+                                            SET InteresAcumulado = @interesAgregado
+                                            WHERE Id = @cuentaObjetivoId
 
-                                COMMIT TRANSACTION ActualizarIntereses
+                                            INSERT INTO [dbo].[MovimientosInteresCO] (CuentaObjetivoId, TipoMovInteresCO, Fecha, Monto, Descripcion)
+                                            VALUES (@cuentaObjetivoId, 2, @fechaInicio, @interesAcumulado, 'Interes Diario')
+
+                                        COMMIT TRANSACTION ActualizarIntereses
+
+                                    END
+
 
                             END
 
@@ -302,16 +307,37 @@ BEGIN
                                     END
 
                             END
-                        --ELSE
-                        --BEGIN
+                        ELSE
+                            BEGIN
 
-                        --	IF @fechaInicio = (SELECT FechaFin FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
-                        --	BEGIN
-                        --TEST
-                        --	select * from persona
-                        --	END
+                                IF @fechaInicio = (SELECT FechaFin FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                                    BEGIN
 
-                        --END
+                                        DECLARE @interesesAcumulados MONEY = (SELECT InteresAcumulado FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                                        DECLARE @saldoActual MONEY = (SELECT SaldoCO FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                                        DECLARE @nuevoSaldo MONEY = @interesesAcumulados + @saldoActual
+                                        DECLARE @saldoCA MONEY = (SELECT Saldo FROM [dbo].[CuentaAhorros] WHERE ID = @cuentaAhorroId)
+
+
+                                        BEGIN TRANSACTION CerrarCO
+
+                                            UPDATE [dbo].[CuentaObjetivo]
+                                            SET InteresAcumulado = 0, SaldoCO = 0, Activo = 0
+                                            WHERE Id = @cuentaObjetivoId
+
+                                            UPDATE [dbo].[CuentaAhorros]
+                                            SET Saldo = (@saldoCA + @nuevoSaldo)
+                                            WHERE Id = @cuentaAhorroId
+
+                                            INSERT INTO [dbo].[MovimientosCO] (CuentaObjetivoId, TipoMovCO, Fecha, Monto, NuevoSaldo)
+                                            VALUES (@cuentaObjetivoId, 3, @fechaInicio, @saldoActual, 0)
+
+
+                                        COMMIT TRANSACTION CerrarCO
+
+                                    END
+
+                            END
 
 
                         FETCH NEXT FROM cursor_CO INTO
