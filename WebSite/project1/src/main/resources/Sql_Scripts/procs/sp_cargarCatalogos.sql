@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_cargarCatalogos]    Script Date: 08/12/2020 9:25:12 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_cargarCatalogos]    Script Date: 20/01/2021 8:12:24 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -24,7 +24,7 @@ BEGIN
         DECLARE @x xml
 
         SELECT @x = D
-        FROM OPENROWSET (BULK 'C:\TestData\Datos_Tarea_2_Catalogos.xml', SINGLE_BLOB) AS Datos(D)
+        FROM OPENROWSET (BULK 'C:\TestData\Datos-Tarea3-Catalogos.xml', SINGLE_BLOB) AS Datos(D)
 
         DECLARE @hdoc INT
 
@@ -95,8 +95,22 @@ BEGIN
         ----Insercion en tabla TipoMovimientos
         INSERT INTO [dbo].[TipoMovimiento] ([Id], [Nombre], [TipoOperacion])
         SELECT [Id], [Nombre], [Tipo]
-        FROM OPENXML (@hdoc, '/Catalogos/Tipo_Movimientos/Tipo_Movimiento', 1)
+        FROM OPENXML (@hdoc, '/Catalogos/Tipo_Movimientos/TipoMovimiento', 1)
                       WITH ([Id] INT, [Nombre] VARCHAR(50), [Tipo] VARCHAR(20))
+
+
+        --Insercion en tabla TipoMovimientosCO
+        INSERT INTO [dbo].[TipoMovimientoCO] ([Id], [Descripcion])
+        SELECT [Id], [Nombre]
+        FROM OPENXML (@hdoc, '/Catalogos/TiposMovimientoCuentaAhorro/Tipo_Movimiento', 1)
+                      WITH ([Id] INT, [Nombre] VARCHAR(50))
+
+        --Insercion en tabla TipoMovimientosCO
+        INSERT INTO [dbo].[TipoEvento] ([Id], [Nombre])
+        SELECT [Id], [Nombre]
+        FROM OPENXML (@hdoc, '/Catalogos/TiposEvento/TipoEvento', 1)
+                      WITH ([Id] INT, [Nombre] VARCHAR(50))
+
 
         EXEC sp_xml_removedocument @hdoc
 

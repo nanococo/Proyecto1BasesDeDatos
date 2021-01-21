@@ -1,6 +1,6 @@
 USE [Banco]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 19/01/2021 3:41:37 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 20/01/2021 7:30:55 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -278,7 +278,7 @@ BEGIN
                             END
 
                         --Proceso del Ahorro
-                        IF DATEPART(DAY, @fechaInicio) = (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
+                        IF DATEPART(DAY, @fechaInicio) = (SELECT DiaAhorro FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId) AND @fechaInicio < @fechaDeFinCO
                             BEGIN
 
 
@@ -307,7 +307,7 @@ BEGIN
                                     END
 
                             END
-                        ELSE
+                            ELSE
                             BEGIN
 
                                 IF @fechaInicio = (SELECT FechaFin FROM [dbo].[CuentaObjetivo] WHERE Id = @cuentaObjetivoId)
