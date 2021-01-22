@@ -665,4 +665,77 @@ public class SQLConnection {
         }
         return new MovementHolder();
     }
+
+    public Query1Holder getQuery1() {
+        ArrayList<Query1> query1s = new ArrayList<>();
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{call sp_consultaUno()}");
+            //Hello
+
+            ResultSet test = proc.executeQuery();
+
+            while (test.next()) {
+                query1s.add(new Query1(
+                        Integer.parseInt(test.getString(1)),
+                        Integer.parseInt(test.getString(2)),
+                        test.getString(3),
+                        Integer.parseInt(test.getString(4)),
+                        Integer.parseInt(test.getString(5)),
+                        test.getString(6),
+                        test.getString(7)
+                ));
+            }
+
+            connection.close();
+            return new Query1Holder(query1s);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception f) {
+                f.printStackTrace();
+            }
+        }
+        return new Query1Holder();
+    }
+
+    public Query3Holder getQuery3() {
+        ArrayList<Query3> query3s = new ArrayList<>();
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{call sp_ObtenerDineroBeneficiarios()}");
+            //Hello
+
+            ResultSet test = proc.executeQuery();
+
+            while (test.next()) {
+                query3s.add(new Query3(
+                        Integer.parseInt(test.getString(1)),
+                        test.getString(2),
+                        Integer.parseInt(test.getString(3)),
+                        Integer.parseInt(test.getString(4))
+                ));
+            }
+
+            connection.close();
+            return new Query3Holder(query3s);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception f) {
+                f.printStackTrace();
+            }
+        }
+        return new Query3Holder();
+    }
 }

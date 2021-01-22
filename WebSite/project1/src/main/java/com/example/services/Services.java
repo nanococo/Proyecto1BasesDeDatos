@@ -236,4 +236,40 @@ public class Services {
         }
         return movements;
     }
+
+    public ArrayList<Query1> getQueryOne() {
+        ArrayList<Query1> query1s = null;
+        try {
+            Query1Holder query1Holder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getQuery1");
+            query1Holder = gson.fromJson(jsonString, Query1Holder.class);
+
+            query1s = query1Holder.getQuery1s();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return query1s;
+    }
+
+    public ArrayList<Query3> getQueryThree() {
+        ArrayList<Query3> query3s = null;
+        try {
+            Query3Holder query3Holder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getQuery3");
+            query3Holder = gson.fromJson(jsonString, Query3Holder.class);
+
+            query3s = query3Holder.getQuery3s();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return query3s;
+    }
 }

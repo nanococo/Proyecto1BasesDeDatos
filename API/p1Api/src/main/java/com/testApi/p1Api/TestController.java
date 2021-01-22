@@ -176,4 +176,14 @@ public class TestController {
                                                @RequestParam(value = "filter") String value4){
         return SQLConnection.getInstance().getMovementsFiltered(value, value2, value3, value4);
     }
+
+    @GetMapping(value = "/getQuery1")
+    public Query1Holder getQuery1(){
+        return SQLConnection.getInstance().getQuery1();
+    }
+
+    @GetMapping(value = "/getQuery3")
+    public Query3Holder getQuery3(){
+        return SQLConnection.getInstance().getQuery3();
+    }
 }
