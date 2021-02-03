@@ -280,6 +280,90 @@ BEGIN
 
                         ---------------------FIN DE LA INCERCIÓN DE DATOS---------------------
 
+                        ---------------------CREACION DE IGxEQxCorredor---------------------
+
+                        --Se delcaran las variables del cursor
+                        DECLARE @giroId INT
+                        DECLARE @equipoId INT
+
+                        --Declaracion del cursor
+                        DECLARE cursor_CO CURSOR
+                            FOR SELECT [IdInstanciaGiro], [IdEquipo] FROM @tempGiroEquipo
+
+                        OPEN cursor_CO
+                        FETCH NEXT FROM cursor_CO INTO
+                            @giroId,
+                            @equipoId;
+
+                        --Inicia la iteracion
+                        WHILE @@FETCH_STATUS = 0
+                            BEGIN
+
+
+                                DECLARE @corredor TABLE(
+                                                           Id INT IDENTITY(1,1),
+                                                           IdCorredor INT
+                                                       )
+
+                                INSERT INTO @corredor ([IdCorredor])
+                                SELECT C.Id FROM [dbo].[CorredoresEnEquipoEnGiro] AS D
+                                                     INNER JOIN [dbo].[Corredores] AS C
+                                                                ON D.IdCorredor = C.Id
+                                WHERE D.IdInstanciaGiro = @giroId
+                                  AND D.IdEquipo = @equipoId
+
+                                --Se declaran las variables del segundo cursos
+                                DECLARE @idCorredor INT
+
+                                -- Se declara el segundo cursor
+                                DECLARE cursor_U CURSOR
+                                    FOR SELECT [IdCorredor] FROM @corredor
+
+                                OPEN cursor_U
+                                FETCH NEXT FROM cursor_U INTO
+                                    @idCorredor
+
+                                --Inicia la iteracion
+                                WHILE @@FETCH_STATUS = 0
+                                    BEGIN
+
+                                        DECLARE @idGiroXEquipo INT = (	SELECT [Id]
+                                                                          FROM [dbo].[InstanciaGiroXEquipo]
+                                                                          WHERE [IdInstanciaGiro] = @giroId
+                                                                            AND [IdEquipo] = @equipoId
+                                        )
+
+                                        INSERT INTO [dbo].[IGxEQXCorredor](
+                                            [IdCorredor],
+                                            [IdInstanciaGiroXEquipo]
+                                        )
+                                        VALUES (
+                                                   @idCorredor,
+                                                   @idGiroXEquipo
+                                               )
+
+
+                                        FETCH NEXT FROM cursor_U INTO
+                                            @idCorredor
+
+                                    END
+
+                                CLOSE cursor_U
+                                DEALLOCATE cursor_U
+
+                                DELETE FROM @corredor
+
+                                FETCH NEXT FROM cursor_CO INTO
+                                    @giroId,
+                                    @equipoId
+
+                            END
+
+                        CLOSE cursor_CO
+                        DEALLOCATE cursor_CO
+
+                        ---------------------FIN CREACION DE IGxEQxCorredor---------------------
+
                     END
                 SET @operationYearStart = (@operationYearStart + 1)
 
