@@ -1,6 +1,6 @@
 USE [CompetenciaCiclistica]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_simulacion]    Script Date: 02/02/2021 3:10:05 pm ******/
+/****** Object:  StoredProcedure [dbo].[sp_operaciones]    Script Date: 03/02/2021 3:19:54 pm ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -27,6 +27,8 @@ BEGIN
         DECLARE @operationYearStart INT
         DECLARE @operationYearEnd INT
 
+        --Return Value
+        DECLARE @outRet INT = 0
 
         --Lectura del XML
         DECLARE @x XML
@@ -71,6 +73,15 @@ BEGIN
                                                       NombrePremio VARCHAR(50),
                                                       NumeroCamisa INT
                                                   )
+
+                DECLARE @carreraTemp TABLE (
+                                               Id INT IDENTITY(1,1),
+                                               IdInstanciaGiro INT,
+                                               CodigoCarrera VARCHAR(50),
+                                               IdEtapa INT,
+                                               FechaCarrera DATE,
+                                               HoraInicio TIME(7)
+                                           )
 
                 --Filtro para solo insertar si la fecha existe en el XML
                 IF EXISTS (SELECT [Id] FROM OPENXML(@hdoc, 'Root/Year',1) WITH ([Id] INT) WHERE [Id] = @operationYearStart)
@@ -161,7 +172,7 @@ BEGIN
 
 
                         --Insertar Carrera
-                        INSERT INTO [dbo].[Carrera] (
+                        INSERT INTO @carreraTemp (
                             [IdInstanciaGiro],
                             [CodigoCarrera],
                             [IdEtapa],
@@ -185,6 +196,20 @@ BEGIN
                                  INNER JOIN [dbo].[InstanciaGiro] AS G
                                             ON D.[CodigoInstanciaGiro] = G.[CodigoInstancia]
                         WHERE D.[Id] = @operationYearStart
+
+                        INSERT INTO [dbo].[Carrera](
+                            [IdInstanciaGiro],
+                            [CodigoCarrera],
+                            [IdEtapa],
+                            [FechaCarrera],
+                            [HoraInicio]
+                        )
+                        SELECT	[IdInstanciaGiro],
+                                  [CodigoCarrera],
+                                  [IdEtapa],
+                                  [FechaCarrera],
+                                  [HoraInicio]
+                        FROM @carreraTemp
 
 
 
@@ -280,180 +305,171 @@ BEGIN
 
                         ---------------------FIN DE LA INCERCIÓN DE DATOS---------------------
 
-                        ---------------------CREACION DE IGxEQxCorredor---------------------
+                    END
 
-                        --Se delcaran las variables del cursor
-                        DECLARE @giroId INT
-                        DECLARE @equipoId INT
+                DECLARE @idEtapa INT,
+                    @idGiro INT,
+                    @idCorredor INT,
+                    @idInstanciaGiro INT,
+                    @idEquipo INT,
+                    @idInstanciaGiroEquipo INT,
+                    @idIGXEQXCorredor INT,
+                    @fechaCarrera DATE
 
-                        --Declaracion del cursor
-                        DECLARE cursor_CO CURSOR
-                            FOR SELECT [IdInstanciaGiro], [IdEquipo] FROM @tempGiroEquipo
+                ---------------------CREACION DE IGxEQxCorredor---------------------
 
-                        OPEN cursor_CO
-                        FETCH NEXT FROM cursor_CO INTO
-                            @giroId,
-                            @equipoId;
+                --Se delcaran las variables del cursor
+                DECLARE @giroId INT
+                DECLARE @equipoId INT
+
+                --Declaracion del cursor
+                DECLARE cursor_CO CURSOR
+                    FOR SELECT [IdInstanciaGiro], [IdEquipo] FROM @tempGiroEquipo
+
+                OPEN cursor_CO
+                FETCH NEXT FROM cursor_CO INTO
+                    @giroId,
+                    @equipoId;
+
+                --Inicia la iteracion
+                WHILE @@FETCH_STATUS = 0
+                    BEGIN
+
+
+                        DECLARE @corredor TABLE(
+                                                   Id INT IDENTITY(1,1),
+                                                   IdCorredor INT
+                                               )
+
+                        INSERT INTO @corredor ([IdCorredor])
+                        SELECT C.Id FROM [dbo].[CorredoresEnEquipoEnGiro] AS D
+                                             INNER JOIN [dbo].[Corredores] AS C
+                                                        ON D.IdCorredor = C.Id
+                        WHERE D.IdInstanciaGiro = @giroId
+                          AND D.IdEquipo = @equipoId
+
+                        -- Se declara el segundo cursor
+                        DECLARE cursor_U CURSOR
+                            FOR SELECT [IdCorredor] FROM @corredor
+
+                        OPEN cursor_U
+                        FETCH NEXT FROM cursor_U INTO
+                            @idCorredor
 
                         --Inicia la iteracion
                         WHILE @@FETCH_STATUS = 0
                             BEGIN
 
+                                DECLARE @idGiroXEquipo INT = (	SELECT [Id]
+                                                                  FROM [dbo].[InstanciaGiroXEquipo]
+                                                                  WHERE [IdInstanciaGiro] = @giroId
+                                                                    AND [IdEquipo] = @equipoId
+                                )
 
-                                DECLARE @corredor TABLE(
-                                                           Id INT IDENTITY(1,1),
-                                                           IdCorredor INT
-                                                       )
+                                INSERT INTO [dbo].[IGxEQXCorredor](
+                                    [IdCorredor],
+                                    [IdInstanciaGiroXEquipo]
+                                )
+                                VALUES (
+                                           @idCorredor,
+                                           @idGiroXEquipo
+                                       )
 
-                                INSERT INTO @corredor ([IdCorredor])
-                                SELECT C.Id FROM [dbo].[CorredoresEnEquipoEnGiro] AS D
-                                                     INNER JOIN [dbo].[Corredores] AS C
-                                                                ON D.IdCorredor = C.Id
-                                WHERE D.IdInstanciaGiro = @giroId
-                                  AND D.IdEquipo = @equipoId
 
-                                --Se declaran las variables del segundo cursos
-                                DECLARE @idCorredor INT
-
-                                -- Se declara el segundo cursor
-                                DECLARE cursor_U CURSOR
-                                    FOR SELECT [IdCorredor] FROM @corredor
-
-                                OPEN cursor_U
                                 FETCH NEXT FROM cursor_U INTO
                                     @idCorredor
 
-                                --Inicia la iteracion
-                                WHILE @@FETCH_STATUS = 0
-                                    BEGIN
-
-                                        DECLARE @idGiroXEquipo INT = (	SELECT [Id]
-                                                                          FROM [dbo].[InstanciaGiroXEquipo]
-                                                                          WHERE [IdInstanciaGiro] = @giroId
-                                                                            AND [IdEquipo] = @equipoId
-                                        )
-
-                                        INSERT INTO [dbo].[IGxEQXCorredor](
-                                            [IdCorredor],
-                                            [IdInstanciaGiroXEquipo]
-                                        )
-                                        VALUES (
-                                                   @idCorredor,
-                                                   @idGiroXEquipo
-                                               )
-
-
-                                        FETCH NEXT FROM cursor_U INTO
-                                            @idCorredor
-
-                                    END
-
-                                CLOSE cursor_U
-                                DEALLOCATE cursor_U
-
-                                DELETE FROM @corredor
-
-                                FETCH NEXT FROM cursor_CO INTO
-                                    @giroId,
-                                    @equipoId
-
                             END
 
-                        CLOSE cursor_CO
-                        DEALLOCATE cursor_CO
+                        CLOSE cursor_U
+                        DEALLOCATE cursor_U
 
-                        ---------------------FIN CREACION DE IGxEQxCorredor---------------------
+                        DELETE FROM @corredor
 
-                        ---------------------INSERCION DE TIEMPOS---------------------
-
-                        --Se delcaran las variables del cursor
-                        DECLARE @idCarrera INT,
-                            @numeroCamisa INT,
-                            @horaLlegada TIME(7)
-
-                        --Declaracion del cursor
-                        DECLARE cursor_CO CURSOR
-                            FOR SELECT [IdCarrera], [NumeroCamisa], [horaLlegada] FROM @FinalCorredoresEnCarrera
-
-                        OPEN cursor_CO
                         FETCH NEXT FROM cursor_CO INTO
-                            @idCarrera,
-                            @numeroCamisa,
-                            @horaLlegada
+                            @giroId,
+                            @equipoId
 
-                        --Inicia la iteracion
-                        WHILE @@FETCH_STATUS = 0
+                    END
+
+                CLOSE cursor_CO
+                DEALLOCATE cursor_CO
+
+                ---------------------FIN CREACION DE IGxEQxCorredor---------------------
+
+                ---------------------INSERCION DE TIEMPOS---------------------
+
+                --Se delcaran las variables del cursor
+                DECLARE @idCarrera INT,
+                    @numeroCamisa INT,
+                    @horaLlegada TIME(7)
+
+                --Declaracion del cursor
+                DECLARE cursor_CO CURSOR
+                    FOR SELECT [IdCarrera], [NumeroCamisa], [horaLlegada] FROM @FinalCorredoresEnCarrera
+
+                OPEN cursor_CO
+                FETCH NEXT FROM cursor_CO INTO
+                    @idCarrera,
+                    @numeroCamisa,
+                    @horaLlegada
+
+                --Inicia la iteracion
+                WHILE @@FETCH_STATUS = 0
+                    BEGIN
+
+                        SELECT	@idCorredor = CO.[Id],
+                                  @idInstanciaGiro = C.[IdInstanciaGiro],
+                                  @idEquipo = CEG.[IdEquipo]
+
+                        FROM [dbo].[Carrera] AS C
+                                 INNER JOIN [dbo].[CorredoresEnEquipoEnGiro] AS CEG
+                                            ON C.[IdInstanciaGiro] = CEG.[IdInstanciaGiro]
+                                 INNER JOIN [dbo].[Corredores] AS CO
+                                            ON CEG.[IdCorredor] = CO.[Id]
+                        WHERE @numeroCamisa = CEG.[NumeroCamisa]
+                          AND @idCarrera = C.[Id]
+
+
+                        SET @idInstanciaGiroEquipo = (	SELECT [Id]
+                                                          FROM [dbo].[InstanciaGiroXEquipo]
+                                                          WHERE [IdInstanciaGiro] = @idInstanciaGiro
+                                                            AND [IdEquipo] = @idEquipo)
+
+
+                        DECLARE @inicioCarrera TIME(7) = (	SELECT [HoraInicio]
+                                                              FROM [dbo].[Carrera]
+                                                              WHERE [Id] = @idCarrera
+                        )
+
+                        DECLARE @sancion INT = (SELECT [MinutosCastigo]
+                                                FROM [dbo].[SancionCarrera]
+                                                WHERE [IdCarrera] = @idCarrera
+                                                  AND [NumeroCamisa] = @numeroCamisa)
+
+
+                        --Calcula minutos durados en la carrera
+                        DECLARE @minutosDurados INT = DATEDIFF(MINUTE, @inicioCarrera, @horaLlegada)
+
+                        SET @idIGXEQXCorredor = (
+                            SELECT [Id]
+                            FROM [dbo].[IGxEQXCorredor]
+                            WHERE [IdInstanciaGiroXEquipo] = @idInstanciaGiroEquipo
+                              AND [IdCorredor] = @idCorredor
+                        )
+
+                        SET @fechaCarrera = (
+                            SELECT [fechaCarrera]
+                            FROM [dbo].[Carrera]
+                            WHERE [Id] = @idCarrera
+                        )
+
+                        DECLARE @minutosActuales INT
+                        DECLARE @minutosNuevos INT
+
+                        --Si existe sancion se registra
+                        IF @sancion IS NOT NULL
                             BEGIN
-
-                                --Obtener variables iniciales
-                                DECLARE @idInstanciaGiro INT,
-                                    @idEquipo INT,
-                                    @idInstanciaGiroEquipo INT
-
-                                SELECT	@idCorredor = CO.[Id],
-                                          @idInstanciaGiro = C.[IdInstanciaGiro],
-                                          @idEquipo = CEG.[IdEquipo]
-
-                                FROM [dbo].[Carrera] AS C
-                                         INNER JOIN [dbo].[CorredoresEnEquipoEnGiro] AS CEG
-                                                    ON C.[IdInstanciaGiro] = CEG.[IdInstanciaGiro]
-                                         INNER JOIN [dbo].[Corredores] AS CO
-                                                    ON CEG.[IdCorredor] = CO.[Id]
-                                WHERE @numeroCamisa = CEG.[NumeroCamisa]
-                                  AND @idCarrera = C.[Id]
-
-
-                                SET @idInstanciaGiroEquipo = (	SELECT [Id]
-                                                                  FROM [dbo].[InstanciaGiroXEquipo]
-                                                                  WHERE [IdInstanciaGiro] = @idInstanciaGiro
-                                                                    AND [IdEquipo] = @idEquipo)
-
-
-                                DECLARE @inicioCarrera TIME(7) = (	SELECT [HoraInicio]
-                                                                      FROM [dbo].[Carrera]
-                                                                      WHERE [Id] = @idCarrera
-                                )
-
-                                DECLARE @sancion INT = (SELECT [MinutosCastigo]
-                                                        FROM [dbo].[SancionCarrera]
-                                                        WHERE [IdCarrera] = @idCarrera
-                                                          AND [NumeroCamisa] = @numeroCamisa)
-
-
-                                --Calcula minutos durados en la carrera
-                                DECLARE @minutosDurados INT = DATEDIFF(MINUTE, @inicioCarrera, @horaLlegada)
-
-                                DECLARE @idIGXEQXCorredor INT = (
-                                    SELECT [Id]
-                                    FROM [dbo].[IGxEQXCorredor]
-                                    WHERE [IdInstanciaGiroXEquipo] = @idInstanciaGiroEquipo
-                                      AND [IdCorredor] = @idCorredor
-                                )
-
-                                DECLARE @fechaCarrera DATE = (
-                                    SELECT [fechaCarrera]
-                                    FROM [dbo].[Carrera]
-                                    WHERE [Id] = @idCarrera
-                                )
-
-                                --Si existe sancion se registra
-                                IF @sancion IS NOT NULL
-                                    BEGIN
-                                        INSERT INTO [dbo].[MovimientosTiempo] (
-                                            [IdIGXEQXCorredor],
-                                            [IdTipoMovTiempo],
-                                            [CantidadTiempo],
-                                            [Fecha]
-                                        )
-                                        VALUES (
-                                                   @idIGXEQXCorredor,
-                                                   1,
-                                                   @sancion,
-                                                   @fechaCarrera
-                                               )
-                                    END
-
-
                                 INSERT INTO [dbo].[MovimientosTiempo] (
                                     [IdIGXEQXCorredor],
                                     [IdTipoMovTiempo],
@@ -462,51 +478,264 @@ BEGIN
                                 )
                                 VALUES (
                                            @idIGXEQXCorredor,
-                                           2,
-                                           @minutosDurados,
+                                           1,
+                                           @sancion,
                                            @fechaCarrera
                                        )
 
+                                --Obtener Minutos Actuales
+                                SET @minutosActuales = (
+                                    SELECT [SumTiempo]
+                                    FROM [dbo].[IGxEQXCorredor]
+                                    WHERE [Id] = @idIGXEQXCorredor
+                                )
 
-                                FETCH NEXT FROM cursor_CO INTO
-                                    @idCarrera,
-                                    @numeroCamisa,
-                                    @horaLlegada
+                                --Calculo de minutos nuevos
+                                SET @minutosNuevos = (@minutosActuales + @sancion)
+
+                                --UPDATE DATOS
+                                BEGIN TRANSACTION updateTiempo
+
+                                    UPDATE [dbo].[IGxEQXCorredor]
+                                    SET [SumTiempo] = @minutosNuevos
+                                    WHERE [Id] = @idIGXEQXCorredor
+
+                                COMMIT TRANSACTION updateTiempo
 
                             END
 
-                        CLOSE cursor_CO
-                        DEALLOCATE cursor_CO
 
-                        ---------------------FIN INSERCION DE TIEMPOS---------------------
+                        INSERT INTO [dbo].[MovimientosTiempo] (
+                            [IdIGXEQXCorredor],
+                            [IdTipoMovTiempo],
+                            [CantidadTiempo],
+                            [Fecha]
+                        )
+                        VALUES (
+                                   @idIGXEQXCorredor,
+                                   2,
+                                   @minutosDurados,
+                                   @fechaCarrera
+                               )
 
-                        ---------------------INSERCION DE PUNTOS---------------------
+                        --Obtener Minutos Actuales
+                        SET @minutosActuales = (
+                            SELECT [SumTiempo]
+                            FROM [dbo].[IGxEQXCorredor]
+                            WHERE [Id] = @idIGXEQXCorredor
+                        )
 
-                        --Se delcaran las variables del cursor
-                        DECLARE @nombreDelPremio VARCHAR(50)
+                        --Calculo de minutos nuevos
+                        SET @minutosNuevos = (@minutosActuales + @minutosDurados)
+
+                        --UPDATE DATOS
+                        BEGIN TRANSACTION updateTiempo
+
+                            UPDATE [dbo].[IGxEQXCorredor]
+                            SET [SumTiempo] = @minutosNuevos
+                            WHERE [Id] = @idIGXEQXCorredor
+
+                        COMMIT TRANSACTION updateTiempo
 
 
-                        --Declaracion del cursor
-                        DECLARE cursor_CO CURSOR
-                            FOR SELECT [IdCarrera], [NombrePremio], [NumeroCamisa] FROM @premiosMontanaTemp
+                        FETCH NEXT FROM cursor_CO INTO
+                            @idCarrera,
+                            @numeroCamisa,
+                            @horaLlegada
 
-                        OPEN cursor_CO
+                    END
+
+                CLOSE cursor_CO
+                DEALLOCATE cursor_CO
+
+                ---------------------FIN INSERCION DE TIEMPOS---------------------
+
+                ---------------------INSERCION DE PUNTOS MONTAÑA---------------------
+
+                --Se delcaran las variables del cursor
+                DECLARE @nombreDelPremio VARCHAR(50)
+
+
+                --Declaracion del cursor
+                DECLARE cursor_CO CURSOR
+                    FOR SELECT [IdCarrera], [NombrePremio], [NumeroCamisa] FROM @premiosMontanaTemp
+
+                OPEN cursor_CO
+                FETCH NEXT FROM cursor_CO INTO
+                    @idCarrera,
+                    @nombreDelPremio,
+                    @numeroCamisa
+
+                --Inicia la iteracion
+                WHILE @@FETCH_STATUS = 0
+                    BEGIN
+
+                        SELECT	@idCorredor = CO.[Id],
+                                  @idInstanciaGiro = C.[IdInstanciaGiro],
+                                  @idEquipo = CEG.[IdEquipo],
+                                  @idEtapa = C.[IdEtapa]
+
+                        FROM [dbo].[Carrera] AS C
+                                 INNER JOIN [dbo].[CorredoresEnEquipoEnGiro] AS CEG
+                                            ON C.[IdInstanciaGiro] = CEG.[IdInstanciaGiro]
+                                 INNER JOIN [dbo].[Corredores] AS CO
+                                            ON CEG.[IdCorredor] = CO.[Id]
+                        WHERE @numeroCamisa = CEG.[NumeroCamisa]
+                          AND @idCarrera = C.[Id]
+
+
+                        SET @idGiro = (	SELECT [IdGiro]
+                                           FROM [dbo].[InstanciaGiro]
+                                           WHERE [Id] = @idInstanciaGiro
+                        )
+
+
+                        DECLARE @puntosPremioMontana INT = (SELECT [Puntos]
+                                                            FROM [dbo].[PremiosMontana]
+                                                            WHERE [Nombre] = @nombreDelPremio
+                                                              AND [IdEtapa] = @idEtapa
+                                                              AND [IdGiro] = @idGiro)
+
+
+                        SET @idInstanciaGiroEquipo = (	SELECT [Id]
+                                                          FROM [dbo].[InstanciaGiroXEquipo]
+                                                          WHERE [IdInstanciaGiro] = @idInstanciaGiro
+                                                            AND [IdEquipo] = @idEquipo)
+
+
+                        SET @idIGXEQXCorredor = (
+                            SELECT [Id]
+                            FROM [dbo].[IGxEQXCorredor]
+                            WHERE [IdInstanciaGiroXEquipo] = @idInstanciaGiroEquipo
+                              AND [IdCorredor] = @idCorredor
+                        )
+
+                        SET @fechaCarrera = (
+                            SELECT [fechaCarrera]
+                            FROM [dbo].[Carrera]
+                            WHERE [Id] = @idCarrera
+                        )
+
+                        DECLARE @puntosMontanaActuales INT
+                        DECLARE @puntosMontanaNuevos INT
+
+                        IF @puntosPremioMontana IS NOT NULL
+                            BEGIN
+
+                                INSERT INTO [dbo].[MovimientosPuntosMontana](
+                                    [IdIGXEQXCorredor],
+                                    [IdTipoMovPtsMontana],
+                                    [CantidadPuntos],
+                                    [Fecha]
+                                )
+                                VALUES (
+                                           @idIGXEQXCorredor,
+                                           1,
+                                           @puntosPremioMontana,
+                                           @fechaCarrera
+                                       )
+
+                                --Obtener Minutos Actuales
+                                SET @puntosMontanaActuales = (
+                                    SELECT [SumPuntosMontana]
+                                    FROM [dbo].[IGxEQXCorredor]
+                                    WHERE [Id] = @idIGXEQXCorredor
+                                )
+
+                                --Calculo de minutos nuevos
+                                SET @puntosMontanaNuevos = (@puntosMontanaActuales + @puntosPremioMontana)
+
+                                --UPDATE DATOS
+                                BEGIN TRANSACTION updateMontana
+
+                                    UPDATE [dbo].[IGxEQXCorredor]
+                                    SET [SumPuntosMontana] = @puntosMontanaNuevos
+                                    WHERE [Id] = @idIGXEQXCorredor
+
+                                COMMIT TRANSACTION updateMontana
+
+                            END
+
+
+
+
+
                         FETCH NEXT FROM cursor_CO INTO
                             @idCarrera,
                             @nombreDelPremio,
                             @numeroCamisa
 
+                    END
+
+                CLOSE cursor_CO
+                DEALLOCATE cursor_CO
+
+
+
+                ---------------------FIN INSERCION DE PUNTOS MONTAÑA---------------------
+
+                ---------------------INSERCION DE PUNTOS REGULARES---------------------
+
+                --Se delcaran las variables del cursor
+                DECLARE @horaSalida TIME(7)
+                DECLARE @codigoCarrera VARCHAR(50)
+
+
+                --Declaracion del cursor
+                DECLARE cursor_CO CURSOR
+                    FOR SELECT [CodigoCarrera], [HoraInicio], [IdEtapa] FROM @carreraTemp
+
+                OPEN cursor_CO
+                FETCH NEXT FROM cursor_CO INTO
+                    @codigoCarrera,
+                    @horaSalida,
+                    @idEtapa
+
+                --Inicia la iteracion
+                WHILE @@FETCH_STATUS = 0
+                    BEGIN
+
+                        SET @idCarrera = (	SELECT [Id]
+                                              FROM [dbo].[Carrera]
+                                              WHERE [CodigoCarrera] = @codigoCarrera)
+
+
+                        DECLARE @cantidadPuntos INT = (	SELECT [Puntos]
+                                                           FROM [dbo].[Etapas]
+                                                           WHERE [Id] = @idEtapa)
+
+
+                        DELETE FROM @FinalCorredoresEnCarrera
+
+                        INSERT INTO @FinalCorredoresEnCarrera (
+                            [IdCarrera],
+                            [NumeroCamisa],
+                            [HoraLlegada]
+                        )
+                        SELECT	[IdCarrera],
+                                  [NumeroCamisa],
+                                  [HoraLlegada]
+                        FROM [dbo].[FinalCorredoresEnCarrera]
+                        WHERE [IdCarrera] = @idCarrera
+                        ORDER BY [HoraLlegada]
+                            ASC
+
+                        -- Se declara el segundo cursor
+                        DECLARE cursor_U CURSOR
+                            FOR SELECT [NumeroCamisa], [horaLlegada] FROM @FinalCorredoresEnCarrera
+
+                        OPEN cursor_U
+                        FETCH NEXT FROM cursor_U INTO
+                            @numeroCamisa,
+                            @horaLlegada
+
                         --Inicia la iteracion
                         WHILE @@FETCH_STATUS = 0
                             BEGIN
 
-                                DECLARE @idEtapa INT,
-                                    @idGiro INT
-
                                 SELECT	@idCorredor = CO.[Id],
                                           @idInstanciaGiro = C.[IdInstanciaGiro],
-                                          @idEquipo = CEG.[IdEquipo],
-                                          @idEtapa = C.[IdEtapa]
+                                          @idEquipo = CEG.[IdEquipo]
 
                                 FROM [dbo].[Carrera] AS C
                                          INNER JOIN [dbo].[CorredoresEnEquipoEnGiro] AS CEG
@@ -523,18 +752,10 @@ BEGIN
                                 )
 
 
-                                DECLARE @puntosPremioMontana INT = (SELECT [Puntos]
-                                                                    FROM [dbo].[PremiosMontana]
-                                                                    WHERE [Nombre] = @nombreDelPremio
-                                                                      AND [IdEtapa] = @idEtapa
-                                                                      AND [IdGiro] = @idGiro)
-
-
                                 SET @idInstanciaGiroEquipo = (	SELECT [Id]
                                                                   FROM [dbo].[InstanciaGiroXEquipo]
                                                                   WHERE [IdInstanciaGiro] = @idInstanciaGiro
                                                                     AND [IdEquipo] = @idEquipo)
-
 
                                 SET @idIGXEQXCorredor = (
                                     SELECT [Id]
@@ -549,50 +770,82 @@ BEGIN
                                     WHERE [Id] = @idCarrera
                                 )
 
+                                DECLARE @puntosRegularesActuales INT
+                                DECLARE @puntosRegularesNuevos INT
 
-                                IF @puntosPremioMontana IS NOT NULL
+                                IF @cantidadPuntos > 0
                                     BEGIN
 
-                                        INSERT INTO [dbo].[MovimientosPuntosMontana](
+                                        INSERT INTO [dbo].[MovimientosPuntosRegular] (
                                             [IdIGXEQXCorredor],
-                                            [IdTipoMovPtsMontana],
+                                            [IdTipoMovPtsRegular],
                                             [CantidadPuntos],
                                             [Fecha]
                                         )
                                         VALUES (
                                                    @idIGXEQXCorredor,
                                                    1,
-                                                   @puntosPremioMontana,
+                                                   @cantidadPuntos,
                                                    @fechaCarrera
                                                )
 
+                                        --Obtener Puntos Actuales
+                                        SET @puntosRegularesActuales = (
+                                            SELECT [SumPuntosRegular]
+                                            FROM [dbo].[IGxEQXCorredor]
+                                            WHERE [Id] = @idIGXEQXCorredor
+                                        )
+
+                                        --Calculo de puntos nuevos
+                                        SET @puntosRegularesNuevos = (@puntosRegularesActuales + @cantidadPuntos)
+
+                                        --UPDATE DATOS
+                                        BEGIN TRANSACTION updateRegulares
+
+                                            UPDATE [dbo].[IGxEQXCorredor]
+                                            SET [SumPuntosRegular] = @puntosRegularesNuevos
+                                            WHERE [Id] = @idIGXEQXCorredor
+
+                                        COMMIT TRANSACTION updateRegulares
+
+
+                                        SET @cantidadPuntos = (@cantidadPuntos - 1)
                                     END
 
 
-
-
-
-                                FETCH NEXT FROM cursor_CO INTO
-                                    @idCarrera,
-                                    @nombreDelPremio,
-                                    @numeroCamisa
+                                FETCH NEXT FROM cursor_U INTO
+                                    @numeroCamisa,
+                                    @horaLlegada
 
                             END
 
-                        CLOSE cursor_CO
-                        DEALLOCATE cursor_CO
+                        CLOSE cursor_U
+                        DEALLOCATE cursor_U
+
+
+                        FETCH NEXT FROM cursor_CO INTO
+                            @codigoCarrera,
+                            @horaSalida,
+                            @idEtapa
 
                     END
+
+                CLOSE cursor_CO
+                DEALLOCATE cursor_CO
+
+
                 SET @operationYearStart = (@operationYearStart + 1)
 
                 DELETE FROM @tempGiroEquipo
                 DELETE FROM @FinalCorredoresEnCarrera
+                DELETE FROM @premiosMontanaTemp
+                DELETE FROM @carreraTemp
 
             END
 
         EXEC sp_xml_removedocument @hdoc
 
-
+        RETURN @outRet
 
     END TRY
 
@@ -618,4 +871,11 @@ BEGIN
                  ERROR_MESSAGE(),
                  GETDATE());
 
+        SET @outRet = -6
+        RETURN @outRet
     END CATCH
+
+
+
+
+END
