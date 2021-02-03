@@ -480,6 +480,108 @@ BEGIN
 
                         ---------------------FIN INSERCION DE TIEMPOS---------------------
 
+                        ---------------------INSERCION DE PUNTOS---------------------
+
+                        --Se delcaran las variables del cursor
+                        DECLARE @nombreDelPremio VARCHAR(50)
+
+
+                        --Declaracion del cursor
+                        DECLARE cursor_CO CURSOR
+                            FOR SELECT [IdCarrera], [NombrePremio], [NumeroCamisa] FROM @premiosMontanaTemp
+
+                        OPEN cursor_CO
+                        FETCH NEXT FROM cursor_CO INTO
+                            @idCarrera,
+                            @nombreDelPremio,
+                            @numeroCamisa
+
+                        --Inicia la iteracion
+                        WHILE @@FETCH_STATUS = 0
+                            BEGIN
+
+                                DECLARE @idEtapa INT,
+                                    @idGiro INT
+
+                                SELECT	@idCorredor = CO.[Id],
+                                          @idInstanciaGiro = C.[IdInstanciaGiro],
+                                          @idEquipo = CEG.[IdEquipo],
+                                          @idEtapa = C.[IdEtapa]
+
+                                FROM [dbo].[Carrera] AS C
+                                         INNER JOIN [dbo].[CorredoresEnEquipoEnGiro] AS CEG
+                                                    ON C.[IdInstanciaGiro] = CEG.[IdInstanciaGiro]
+                                         INNER JOIN [dbo].[Corredores] AS CO
+                                                    ON CEG.[IdCorredor] = CO.[Id]
+                                WHERE @numeroCamisa = CEG.[NumeroCamisa]
+                                  AND @idCarrera = C.[Id]
+
+
+                                SET @idGiro = (	SELECT [IdGiro]
+                                                   FROM [dbo].[InstanciaGiro]
+                                                   WHERE [Id] = @idInstanciaGiro
+                                )
+
+
+                                DECLARE @puntosPremioMontana INT = (SELECT [Puntos]
+                                                                    FROM [dbo].[PremiosMontana]
+                                                                    WHERE [Nombre] = @nombreDelPremio
+                                                                      AND [IdEtapa] = @idEtapa
+                                                                      AND [IdGiro] = @idGiro)
+
+
+                                SET @idInstanciaGiroEquipo = (	SELECT [Id]
+                                                                  FROM [dbo].[InstanciaGiroXEquipo]
+                                                                  WHERE [IdInstanciaGiro] = @idInstanciaGiro
+                                                                    AND [IdEquipo] = @idEquipo)
+
+
+                                SET @idIGXEQXCorredor = (
+                                    SELECT [Id]
+                                    FROM [dbo].[IGxEQXCorredor]
+                                    WHERE [IdInstanciaGiroXEquipo] = @idInstanciaGiroEquipo
+                                      AND [IdCorredor] = @idCorredor
+                                )
+
+                                SET @fechaCarrera = (
+                                    SELECT [fechaCarrera]
+                                    FROM [dbo].[Carrera]
+                                    WHERE [Id] = @idCarrera
+                                )
+
+
+                                IF @puntosPremioMontana IS NOT NULL
+                                    BEGIN
+
+                                        INSERT INTO [dbo].[MovimientosPuntosMontana](
+                                            [IdIGXEQXCorredor],
+                                            [IdTipoMovPtsMontana],
+                                            [CantidadPuntos],
+                                            [Fecha]
+                                        )
+                                        VALUES (
+                                                   @idIGXEQXCorredor,
+                                                   1,
+                                                   @puntosPremioMontana,
+                                                   @fechaCarrera
+                                               )
+
+                                    END
+
+
+
+
+
+                                FETCH NEXT FROM cursor_CO INTO
+                                    @idCarrera,
+                                    @nombreDelPremio,
+                                    @numeroCamisa
+
+                            END
+
+                        CLOSE cursor_CO
+                        DEALLOCATE cursor_CO
+
                     END
                 SET @operationYearStart = (@operationYearStart + 1)
 
