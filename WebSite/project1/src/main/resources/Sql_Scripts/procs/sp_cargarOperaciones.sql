@@ -15,7 +15,7 @@ ALTER PROCEDURE [dbo].[sp_operaciones]
 
 AS
 BEGIN
-            LINENO 0
+    LINENO 0
     -- SET NOCOUNT ON added to prevent extra result sets from
     -- interfering with SELECT statements.
     SET NOCOUNT ON;

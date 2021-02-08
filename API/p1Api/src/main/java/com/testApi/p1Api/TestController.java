@@ -186,4 +186,28 @@ public class TestController {
     public Query3Holder getQuery3(){
         return SQLConnection.getInstance().getQuery3();
     }
+
+    @GetMapping(value = "/getNewQuery1")
+    public NewQuery1Holder getNewQuery1(@RequestParam(value = "giroName") String value,
+                                  @RequestParam(value = "year") String value2){
+        return SQLConnection.getInstance().getNewQuery1(value, value2);
+    }
+
+    @GetMapping(value = "/getNewQuery2")
+    public NewQuery2Holder getNewQuery2(@RequestParam(value = "giroName") String value,
+                                        @RequestParam(value = "year") String value2){
+        return SQLConnection.getInstance().getNewQuery2(value, value2);
+    }
+
+    @GetMapping(value = "/getNewQuery3")
+    public NewQuery3Holder getNewQuery3(@RequestParam(value = "giroName") String value,
+                                        @RequestParam(value = "year") String value2){
+        return SQLConnection.getInstance().getNewQuery3(value, value2);
+    }
+
+    @GetMapping(value = "/getNewQuery4")
+    public NewQuery4Holder getNewQuery4(@RequestParam(value = "giroName") String value,
+                                        @RequestParam(value = "year") String value2){
+        return SQLConnection.getInstance().getNewQuery4(value, value2);
+    }
 }

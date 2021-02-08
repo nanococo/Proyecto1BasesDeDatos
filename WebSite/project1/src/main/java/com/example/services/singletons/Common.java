@@ -19,6 +19,7 @@ public class Common {
      */
     //~Kendall P
     public static String readJsonFromUrl(String url) {
+        System.out.println(url);
         try (InputStream is = new URL(url).openStream()) {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             return readAll(rd);

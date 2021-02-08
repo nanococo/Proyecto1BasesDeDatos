@@ -272,4 +272,76 @@ public class Services {
         }
         return query3s;
     }
+
+    public ArrayList<NewQuery1> getNewQuery1(String giroName, String year) {
+        ArrayList<NewQuery1> newQuery1s = null;
+        try {
+            NewQuery1Holder newQuery1Holder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getNewQuery1?year="+year+"&giroName="+URLEncoder.encode(giroName, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=");
+            newQuery1Holder = gson.fromJson(jsonString, NewQuery1Holder.class);
+
+            newQuery1s = newQuery1Holder.getNewQuery1s();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return newQuery1s;
+    }
+
+    public ArrayList<NewQuery2> getNewQuery2(String giroName, String year) {
+        ArrayList<NewQuery2> newQuery2s = null;
+        try {
+            NewQuery2Holder newQuery2Holder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getNewQuery2?year="+year+"&giroName="+URLEncoder.encode(giroName, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=");
+            newQuery2Holder = gson.fromJson(jsonString, NewQuery2Holder.class);
+
+            newQuery2s = newQuery2Holder.getNewQuery2s();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return newQuery2s;
+    }
+
+    public ArrayList<NewQuery3> getNewQuery3(String giroName, String year) {
+        ArrayList<NewQuery3> newQuery3s = null;
+        try {
+            NewQuery3Holder newQuery3Holder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getNewQuery3?year="+year+"&giroName="+URLEncoder.encode(giroName, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=");
+            newQuery3Holder = gson.fromJson(jsonString, NewQuery3Holder.class);
+
+            newQuery3s = newQuery3Holder.getNewQuery3s();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return newQuery3s;
+    }
+
+    public ArrayList<NewQuery4> getNewQuery4(String giroName, String year) {
+        ArrayList<NewQuery4> newQuery4s = null;
+        try {
+            NewQuery4Holder newQuery4Holder;
+            Gson gson = new Gson();
+
+            System.out.println(Common.accountId);
+
+            String jsonString = Common.readJsonFromUrl("http://localhost:8081/getNewQuery4?year="+year+"&giroName="+URLEncoder.encode(giroName, StandardCharsets.UTF_8.toString())).replaceAll("%26", "&").replaceAll("%3D", "=");
+            newQuery4Holder = gson.fromJson(jsonString, NewQuery4Holder.class);
+
+            newQuery4s = newQuery4Holder.getNewQuery4s();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return newQuery4s;
+    }
 }

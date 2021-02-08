@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class SQLConnection {
 
-    private final String connectionString = "jdbc:sqlserver://192.168.39.199:1433;databaseName=Banco";
+    private final String connectionString = "jdbc:sqlserver://192.168.39.199:1433;databaseName=CompetenciaCiclistica";
     private final String user = "waifuBot";
     private final String password = "pass1234";
 
@@ -737,5 +737,141 @@ public class SQLConnection {
             }
         }
         return new Query3Holder();
+    }
+
+    public NewQuery1Holder getNewQuery1(String giroName, String year) {
+        ArrayList<NewQuery1> newQuery1s = new ArrayList<>();
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{call sp_getBestRunners(?,?)}");
+            proc.setString(1, giroName);
+            proc.setInt(2, Integer.parseInt(year));
+
+            ResultSet test = proc.executeQuery();
+
+            while (test.next()) {
+                newQuery1s.add(new NewQuery1(
+                        test.getString(1),
+                        Integer.parseInt(test.getString(2))
+                ));
+            }
+
+            connection.close();
+            return new NewQuery1Holder(newQuery1s);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception f) {
+                f.printStackTrace();
+            }
+        }
+        return new NewQuery1Holder();
+    }
+
+    public NewQuery2Holder getNewQuery2(String giroName, String year) {
+        ArrayList<NewQuery2> newQuery2s = new ArrayList<>();
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{call sp_getBestRegularRunners(?,?)}");
+            proc.setString(1, giroName);
+            proc.setInt(2, Integer.parseInt(year));
+
+            ResultSet test = proc.executeQuery();
+
+            while (test.next()) {
+                newQuery2s.add(new NewQuery2(
+                        test.getString(1),
+                        Integer.parseInt(test.getString(2))
+                ));
+            }
+
+            connection.close();
+            return new NewQuery2Holder(newQuery2s);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception f) {
+                f.printStackTrace();
+            }
+        }
+        return new NewQuery2Holder();
+    }
+
+    public NewQuery3Holder getNewQuery3(String giroName, String year) {
+        ArrayList<NewQuery3> newQuery3s = new ArrayList<>();
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{call sp_getRunnersWithBestScore(?,?)}");
+            proc.setString(1, giroName);
+            proc.setInt(2, Integer.parseInt(year));
+
+            ResultSet test = proc.executeQuery();
+
+            while (test.next()) {
+                newQuery3s.add(new NewQuery3(
+                        test.getString(1),
+                        Integer.parseInt(test.getString(2))
+                ));
+            }
+
+            connection.close();
+            return new NewQuery3Holder(newQuery3s);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception f) {
+                f.printStackTrace();
+            }
+        }
+        return new NewQuery3Holder();
+    }
+
+    public NewQuery4Holder getNewQuery4(String giroName, String year) {
+        ArrayList<NewQuery4> newQuery4s = new ArrayList<>();
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(connectionString, user, this.password);
+
+            CallableStatement proc = connection.prepareCall("{call sp_getBestTeams(?,?)}");
+            proc.setString(1, giroName);
+            proc.setInt(2, Integer.parseInt(year));
+
+            ResultSet test = proc.executeQuery();
+
+            while (test.next()) {
+                newQuery4s.add(new NewQuery4(
+                        test.getString(1),
+                        Integer.parseInt(test.getString(2))
+                ));
+            }
+
+            connection.close();
+            return new NewQuery4Holder(newQuery4s);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (Exception f) {
+                f.printStackTrace();
+            }
+        }
+        return new NewQuery4Holder();
     }
 }
